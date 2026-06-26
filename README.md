@@ -42,8 +42,4 @@ A full-stack RAG (Retrieval-Augmented Generation) chatbot that enables users to 
 - Qdrant instance (local or cloud)
 - API keys for: Groq, Voyage AI, Tavily
 
-### Backend Setup
 
-1. Navigate to the backend folder:
-   ```bash
-   cd backend
