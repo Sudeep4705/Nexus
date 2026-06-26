@@ -8,8 +8,6 @@ import {validate} from "../middlewares/verifyLogin.js"
 const prisma = new PrismaClient();
 
 router.post("/signup", async (req, res) => {
-  console.log("signup hittttt");
-  
   const { error, value } = userSchema.validate(req.body);
   if (error) {
     return res.status(400).json({ error: error.details[0].message });

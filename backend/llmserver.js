@@ -55,7 +55,6 @@ export async function generateMain(userMsg,threadId){
   })
   const history  = chat?chat.messages:[]
     const relevantchunks = await vectorStore.similaritySearch(userMsg,3)
-      console.log("🔍 Retrieved chunks:", relevantchunks.map(c => c.pageContent));
     const context = relevantchunks.map((chunk)=>chunk.pageContent).join('\n\n')
     const sysPrompt = `SYSTEM OVERRIDE: You are a helpful assistant with access to two sources:
 1. The "Relevant context" section (internal documents/data).
@@ -113,8 +112,6 @@ while(true){
   });
 
 //pushing the assistant message
-console.log(completions.choices[0].message);
-
 messages.push(completions.choices[0].message)
 
   const toolcalls = completions.choices[0].message.tool_calls;

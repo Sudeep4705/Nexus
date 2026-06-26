@@ -30,8 +30,6 @@ const uploads = multer({
 router.post("/add",validate,async (req, res) => {
   const msg = req.body.content;
   const threadId = req.body.threadId;
-  console.log("this my thread id",threadId);
-  
   if (!msg) {
     return res.status(400).json({ message: "All fields required" });
   }
@@ -76,8 +74,6 @@ router.post("/add",validate,async (req, res) => {
 })
 
 router.post("/fileupload",validate,uploads.single("file"), async (req, res) => {
-  console.log("file upload hitttt");
-  
   try {
     if (!req.file) {
       return res.status(400).json({ error: "'No file uploaded'" });
@@ -126,7 +122,6 @@ router.get("/:threadId",validate, async (req, res) => {
 })
 
 router.get("/",validate,async(req,res)=>{
-  console.log("im fetching the chats");
   try{
     const chats = await prisma.chat.findMany({
       where:{
