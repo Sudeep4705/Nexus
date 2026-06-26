@@ -56,16 +56,21 @@ export async function generateMain(userMsg,threadId){
   const history  = chat?chat.messages:[]
     const relevantchunks = await vectorStore.similaritySearch(userMsg,3)
     const context = relevantchunks.map((chunk)=>chunk.pageContent).join('\n\n')
-    const sysPrompt = `SYSTEM OVERRIDE: You are a helpful assistant with access to two sources:
-1. The "Relevant context" section (provided below).
-2. A WebSearch tool for real‑time or external information.
+    const sysPrompt = `SYSTEM OVERRIDE: You are a helpful assistant.
 
-RULES:
-- If the context contains the answer → use it directly and respond.
-- If the context is empty or does NOT contain the answer → DO NOT mention that you checked the context. Instead, silently use the WebSearch tool and respond with the search results.
-- Never say "Based on the provided context" or "The context says" – just give the answer.
+RULES FOR ANSWERING:
+1. If the context contains the answer → use it directly.
+2. If the context is empty or missing → use WebSearch.
+3. NEVER mention the context in your response.
+
+FORMATTING RULES:
+- Use ## for section headings.
+- Use bullet points (-) for lists.
+- Use **bold** for important terms.
+- Keep each section short and scannable.
 
 Now answer the user's question.
+
 `;
 
     const userQuery = `Question:${userMsg} Relevant context:${context}
