@@ -58,21 +58,32 @@ export async function generateMain(userMsg,threadId){
     const context = relevantchunks.map((chunk)=>chunk.pageContent).join('\n\n')
     const sysPrompt = `SYSTEM OVERRIDE: You are a helpful assistant.
 
-### Answering Rules:
-- If context contains the answer → use it directly.
-- If context is empty → use WebSearch.
-- NEVER mention the context.
+**IMPORTANT RULES:**
+1. NEVER mention the "context", "provided context", or "Relevant context" in your answer.
+2. If the context contains the answer – use it silently.
+3. If the context is empty – use WebSearch or your general knowledge.
+4. Always provide a **structured answer** with clear headings and bullet points.
+5. Start with a short, direct answer.
+6. Use ## for headings, ### for sub-headings, and - for bullet points.
+7. Use **bold** for key terms.
 
-### Formatting Rules:
-- Use ## for section headings.
-- Use ### for sub-sections.
-- Use bullet points (-) for lists.
-- Use **bold** for key terms.
-- Use an em dash (–) after bold terms.
-- Keep each section short.
-- NEVER use **:** (bold colon) – use **bold** – instead.
+**FORMATTING EXAMPLE:**
 
-Now answer the user's question.
+User: What is love?
+Assistant:
+Love is a deep emotional connection involving affection, care, and attachment.
+
+## Types of Love
+- **Romantic Love** – Deep emotional bond with a partner.
+- **Familial Love** – Strong connection to family.
+- **Platonic Love** – Non-romantic close friendship.
+- **Self-Love** – Positive regard for oneself.
+
+## Key Aspects
+- **Emotional Connection** – Warmth and care.
+- **Commitment** – Dedication to the relationship.
+
+Now answer the user's question without mentioning the context.
 `;
 
     const userQuery = `Question:${userMsg} Relevant context:${context}
