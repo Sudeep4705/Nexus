@@ -28,7 +28,7 @@ useEffect(()=>{
   if(threadId && threadId !== "new"){
     const fetchMessages =async()=>{
       try{
-        const res = await axios.get(`http://localhost:8333/chats/${threadId}`,{withCredentials:true})
+        const res = await axios.get(`https://nexus-foq8.onrender.com/chats/${threadId}`,{withCredentials:true})
         setMessage(res.data.messages)
       }catch(error){
     console.error("Failed to fetch messages:", error);
@@ -52,7 +52,7 @@ useEffect(()=>{
     try {
       console.log("im entering");
       let res = await axios.post(
-        "http://localhost:8333/chats/add",
+        "https://nexus-foq8.onrender.com/chats/add",
         { content: input,threadId },
         { withCredentials: true },
       );
@@ -84,7 +84,7 @@ useEffect(()=>{
     formdata.append("file",file)
     try{
    setisloading(true)
-    let res = await axios.post("http://localhost:8333/chats/fileupload",formdata,{headers:{
+    let res = await axios.post("https://nexus-foq8.onrender.com/chats/fileupload",formdata,{headers:{
       'Content-Type':'multipart/form-data'
     },withCredentials:true})
   

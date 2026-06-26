@@ -12,7 +12,7 @@ export default function Sidebar() {
   useEffect(() => {
     const fetchChats = async () => {
       try {
-        const res = await axios.get("http://localhost:8333/chats/", {
+        const res = await axios.get("https://nexus-foq8.onrender.com/chats/", {
           withCredentials: true,
         });
         setChats(res.data.chats);

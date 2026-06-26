@@ -18,7 +18,7 @@ export default function Login() {
 
   const submitForm = async (data) => {
     try {
-      const res = await axios.post("http://localhost:8333/auth/login", data, {
+      const res = await axios.post("https://nexus-foq8.onrender.com/auth/login", data, {
         withCredentials: true,
       });
       setUser(res.data.user)

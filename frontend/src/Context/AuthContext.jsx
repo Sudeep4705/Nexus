@@ -8,7 +8,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const cheklogin = async () => {
       try {
-        let res = await axios.get("http://localhost:8333/auth/verify", {
+        let res = await axios.get("https://nexus-foq8.onrender.com/auth/verify", {
           withCredentials: true,
         });
         setUser(res.data.user)
