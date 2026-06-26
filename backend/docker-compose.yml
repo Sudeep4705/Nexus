@@ -1,0 +1,32 @@
+version: '3'
+services :
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrantCorpintel
+    ports:
+      - "6333:6333"   # HTTP API + Web UI
+      - "6334:6334"   # gRPC API
+    volumes:
+      - ./qdrant_storage:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__GRPC_PORT=6334
+      - QDRANT__LOG_LEVEL=INFO
+    restart: unless-stopped
+  postgresDB:
+    image: postgres
+    container_name: corpintel
+    ports: 
+      - "4444:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    environment:
+      - POSTGRES_USER=sudeep
+      - POSTGRES_PASSWORD=6633
+      
+volumes:
+  postgres-data:
+    driver: local
+
+  
+  
+    
