@@ -253,7 +253,8 @@ async function calculate(expression) {
 async function YouTubeSearch({ query }) {
   console.log("🔍 Searching YouTube for:", query);
   const API_KEY = process.env.YOUTUBE_API_KEY;
-  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${encodeURIComponent(query)}&key=${API_KEY}&type=video&order=date&videoDuration=long`;
+  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${encodeURIComponent(query)}&key=${API_KEY}&type=video&order=relevance`;
+
   try {
     const response = await fetch(url);
     const data = await response.json();
@@ -262,14 +263,15 @@ async function YouTubeSearch({ query }) {
       return "No YouTube videos found for that query.";
     }
 
-    // Format the results nicely
     let results = `Here are the top 5 YouTube videos for "${query}":\n\n`;
     data.items.forEach((item, index) => {
       const title = item.snippet.title;
-      const videoId = item.id.videoId;
-      const url = `https://www.youtube.com/watch?v=${videoId}`;
-      results += `${index + 1}. **${title}**\n   Link: ${url}\n\n`;
+      const videoId = item.id?.videoId;
+      if (!videoId) return; // skip if videoId is missing
+      const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+      results += `${index + 1}. **${title}**\n   Link: ${videoUrl}\n\n`;
     });
+
     return results;
   } catch (error) {
     console.error("YouTube API error:", error);
