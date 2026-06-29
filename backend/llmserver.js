@@ -254,50 +254,41 @@ async function YouTubeSearch({ query }) {
   console.log("🔍 Searching YouTube for:", query);
   const API_KEY = process.env.YOUTUBE_API_KEY;
 
-  // Blocked category IDs: 10 = Music, 24 = Entertainment
-  const BLOCKED_CATEGORIES = ["10", "24"];
+  // Step 1 – Search (get 10 results so we have a buffer after filtering)
+  const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(query)}&key=${API_KEY}&type=video&order=relevance&videoDuration=long`;
+  const searchRes = await fetch(searchUrl);
+  const searchData = await searchRes.json();
 
-  const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(query)}&key=${API_KEY}&type=video&order=relevance`;
-
-  try {
-    const searchResponse = await fetch(searchUrl);
-    const searchData = await searchResponse.json();
-
-    if (!searchData.items || searchData.items.length === 0) {
-      return "No YouTube videos found for that query.";
-    }
-
-    const videoIds = searchData.items
-      .map((item) => item.id?.videoId)
-      .filter(Boolean)
-      .join(",");
-
-    // Fetch status + snippet (categoryId lives in snippet)
-    const validateUrl = `https://www.googleapis.com/youtube/v3/videos?part=status,snippet&id=${videoIds}&key=${API_KEY}`;
-    const validateResponse = await fetch(validateUrl);
-    const validateData = await validateResponse.json();
-
-    const validVideos = validateData.items.filter((v) => {
-      const isPublic = v.status.privacyStatus === "public";
-      const isEmbeddable = v.status.embeddable === true;
-      const isNotMusic = !BLOCKED_CATEGORIES.includes(v.snippet.categoryId); // 🔑 key fix
-      return isPublic && isEmbeddable && isNotMusic;
-    });
-
-    if (validVideos.length === 0) {
-      return "No accessible YouTube videos found for that query.";
-    }
-
-    let results = `Here are the top YouTube videos for "${query}":\n\n`;
-    validVideos.slice(0, 5).forEach((video, index) => {
-      const title = video.snippet.title;
-      const videoUrl = `https://www.youtube.com/watch?v=${video.id}`;
-      results += `${index + 1}. **${title}**\n   Link: ${videoUrl}\n\n`;
-    });
-
-    return results;
-  } catch (error) {
-    console.error("YouTube API error:", error);
-    return "Sorry, I couldn't fetch YouTube videos at the moment.";
+  if (!searchData.items || searchData.items.length === 0) {
+    return "No YouTube videos found for that query.";
   }
+
+  // Step 2 – Extract video IDs
+  const videoIds = searchData.items.map(item => item.id.videoId).join(',');
+
+  // Step 3 – Check privacy status of each video
+  const checkUrl = `https://www.googleapis.com/youtube/v3/videos?part=status&id=${videoIds}&key=${API_KEY}`;
+  const checkRes = await fetch(checkUrl);
+  const checkData = await checkRes.json();
+
+  // Step 4 – Filter only playable videos (public or unlisted)
+  const available = searchData.items.filter(item => {
+    const status = checkData.items.find(v => v.id === item.id.videoId);
+    return status && (status.status.privacyStatus === 'public' || status.status.privacyStatus === 'unlisted');
+  });
+
+  if (available.length === 0) {
+    return "No playable YouTube videos found. Try a different keyword.";
+  }
+
+  // Step 5 – Take top 5 and format response
+  const top = available.slice(0, 5);
+  let results = `Here are the top playable YouTube videos for "${query}":\n\n`;
+  top.forEach((item, i) => {
+    const title = item.snippet.title;
+    const videoId = item.id.videoId;
+    const url = `https://www.youtube.com/watch?v=${videoId}`;
+    results += `${i+1}. **${title}**\n   Link: ${url}\n\n`;
+  });
+  return results;
 }
