@@ -157,20 +157,24 @@ Now answer the user's question.
           },
         },
         // 3. NEW YouTube Search
-       {
-  type: "function",
-  function: {
-    name: "YouTubeSearch",
-    description: "CRITICAL: You MUST call this tool whenever the user asks for YouTube videos or video content. If you do not call this tool, you will fail the task. This tool returns real video links.",
-    parameters: {
-      type: "object",
-      properties: {
-        query: { type: "string", description: "The search keyword for the video" }
-      },
-      required: ["query"]
-    }
-  }
-}
+        {
+          type: "function",
+          function: {
+            name: "YouTubeSearch",
+            description:
+              "CRITICAL: You MUST call this tool whenever the user asks for YouTube videos or video content. If you do not call this tool, you will fail the task. This tool returns real video links.",
+            parameters: {
+              type: "object",
+              properties: {
+                query: {
+                  type: "string",
+                  description: "The search keyword for the video",
+                },
+              },
+              required: ["query"],
+            },
+          },
+        },
       ],
       tool_choice: "auto",
       model: "meta-llama/llama-4-scout-17b-16e-instruct",
@@ -254,45 +258,72 @@ async function YouTubeSearch({ query }) {
   console.log("🔍 Searching YouTube for:", query);
   const API_KEY = process.env.YOUTUBE_API_KEY;
 
-  // Step 1 – Search (get 10 results so we have a buffer after filtering)
-  const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(query)}&key=${API_KEY}&type=video&order=relevance&videoDuration=long`;
-  const searchRes = await fetch(searchUrl);
-  const searchData = await searchRes.json();
+  try {
+    // Step 1 – Search
+    const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(query)}&key=${API_KEY}&type=video&order=relevance`;
+    const searchRes = await fetch(searchUrl);
+    const searchData = await searchRes.json();
 
-  if (!searchData.items || searchData.items.length === 0) {
-    return "No YouTube videos found for that query.";
-  }
+    if (searchData.error) {
+      return `YouTube API error: ${searchData.error.message}`;
+    }
+    if (!searchData.items || searchData.items.length === 0) {
+      return "No YouTube videos found for that query.";
+    }
 
-  // Step 2 – Extract video IDs
-  const videoIds = searchData.items.map((item) => item.id.videoId).join(",");
-
-  // Step 3 – Check privacy status of each video
-  const checkUrl = `https://www.googleapis.com/youtube/v3/videos?part=status&id=${videoIds}&key=${API_KEY}`;
-  const checkRes = await fetch(checkUrl);
-  const checkData = await checkRes.json();
-
-  // Step 4 – Filter only playable videos (public or unlisted)
-  const available = searchData.items.filter((item) => {
-    const status = checkData.items.find((v) => v.id === item.id.videoId);
-    return (
-      status &&
-      (status.status.privacyStatus === "public" ||
-        status.status.privacyStatus === "unlisted")
+    // DEFENSIVE: Only keep items that actually have a videoId
+    const validItems = searchData.items.filter(
+      (item) => item?.id?.videoId && typeof item.id.videoId === "string"
     );
-  });
 
-  if (available.length === 0) {
-    return "No playable YouTube videos found. Try a different keyword.";
+    if (validItems.length === 0) {
+      return "No valid video results found. The API may have returned channels or playlists.";
+    }
+
+    // Step 2 – Extract video IDs
+    const videoIds = validItems.map((item) => item.id.videoId).join(",");
+
+    // Step 3 – Check status of each video
+    const checkUrl = `https://www.googleapis.com/youtube/v3/videos?part=status,contentDetails&id=${videoIds}&key=${API_KEY}`;
+    const checkRes = await fetch(checkUrl);
+    const checkData = await checkRes.json();
+
+    if (checkData.error) {
+      return `YouTube API error (status check): ${checkData.error.message}`;
+    }
+
+    // Step 4 – Filter playable videos
+    const available = validItems.filter((item) => {
+      const video = checkData.items.find((v) => v.id === item.id.videoId);
+      if (!video || !video.status) return false;
+
+      const isPublic = video.status.privacyStatus === "public";
+      const isUnlisted = video.status.privacyStatus === "unlisted";
+      const isProcessed = video.status.uploadStatus === "processed";
+
+      // Also reject embed-restricted videos if you plan to embed them
+      // const embeddable = video.status.embeddable !== false;
+
+      return (isPublic || isUnlisted) && isProcessed;
+    });
+
+    if (available.length === 0) {
+      return "No playable YouTube videos found. They may be private, deleted, or still processing.";
+    }
+
+    // Step 5 – Format top 5
+    const top = available.slice(0, 5);
+    let results = `Here are the top playable YouTube videos for "${query}":\n\n`;
+    top.forEach((item, i) => {
+      const title = item.snippet?.title || "Untitled";
+      const videoId = item.id.videoId;
+      const url = `https://www.youtube.com/watch?v=${videoId}`;
+      results += `${i + 1}. **${title}**\n   Link: ${url}\n\n`;
+    });
+
+    return results;
+  } catch (err) {
+    console.error("YouTubeSearch error:", err);
+    return `Failed to search YouTube: ${err.message}`;
   }
-
-  // Step 5 – Take top 5 and format response
-  const top = available.slice(0, 5);
-  let results = `Here are the top playable YouTube videos for "${query}":\n\n`;
-  top.forEach((item, i) => {
-    const title = item.snippet.title;
-    const videoId = item.id.videoId;
-    const url = `https://www.youtube.com/watch?v=${videoId}`;
-    results += `${i + 1}. **${title}**\n   Link: ${url}\n\n`;
-  });
-  return results;
 }
