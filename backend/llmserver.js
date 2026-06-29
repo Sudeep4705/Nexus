@@ -157,11 +157,11 @@ Now answer the user's question.
           },
         },
         // 3. NEW YouTube Search
-       {
+        {
   type: "function",
   function: {
     name: "YouTubeSearch",
-    description: "ALWAYS use this tool when the user asks for YouTube videos, tutorials, or any video content. This tool will return real video links. Do NOT answer from your own knowledge.",
+    description: "Search YouTube for videos and return real video links. Use this tool whenever the user asks for videos, tutorials, or any video content. This tool must be used; do not answer from memory.",
     parameters: {
       type: "object",
       properties: {
@@ -264,7 +264,7 @@ async function YouTubeSearch({ query }) {
   }
 
   // Step 2 – Extract video IDs
-  const videoIds = searchData.items.map(item => item.id.videoId).join(',');
+  const videoIds = searchData.items.map((item) => item.id.videoId).join(",");
 
   // Step 3 – Check privacy status of each video
   const checkUrl = `https://www.googleapis.com/youtube/v3/videos?part=status&id=${videoIds}&key=${API_KEY}`;
@@ -272,9 +272,13 @@ async function YouTubeSearch({ query }) {
   const checkData = await checkRes.json();
 
   // Step 4 – Filter only playable videos (public or unlisted)
-  const available = searchData.items.filter(item => {
-    const status = checkData.items.find(v => v.id === item.id.videoId);
-    return status && (status.status.privacyStatus === 'public' || status.status.privacyStatus === 'unlisted');
+  const available = searchData.items.filter((item) => {
+    const status = checkData.items.find((v) => v.id === item.id.videoId);
+    return (
+      status &&
+      (status.status.privacyStatus === "public" ||
+        status.status.privacyStatus === "unlisted")
+    );
   });
 
   if (available.length === 0) {
@@ -288,7 +292,7 @@ async function YouTubeSearch({ query }) {
     const title = item.snippet.title;
     const videoId = item.id.videoId;
     const url = `https://www.youtube.com/watch?v=${videoId}`;
-    results += `${i+1}. **${title}**\n   Link: ${url}\n\n`;
+    results += `${i + 1}. **${title}**\n   Link: ${url}\n\n`;
   });
   return results;
 }
