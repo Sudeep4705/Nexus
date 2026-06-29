@@ -2,9 +2,9 @@ import dotenv from "dotenv";
 dotenv.config();
 import Groq from "groq-sdk"
 import { tavily } from "@tavily/core";
+import { evaluate } from 'mathjs';
 import { QdrantVectorStore } from "@langchain/qdrant";
 import { VoyageEmbeddings } from "@langchain/community/embeddings/voyage"
-
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 // import { mcpClient } from "./mcpTavily.js";
@@ -123,7 +123,7 @@ while(true){
           },
         },
       },
-        // 2. New Calculator tool
+    // 2. New Calculator tool
   {
     type: "function",
     function: {
@@ -202,7 +202,7 @@ async function WebSearch({ query }) {
 async function calculate(expression) {
   try {
     // Use Function constructor for safe evaluation (or use 'mathjs' library for safety)
-    const result = Function(`"use strict"; return (${expression})`)();
+    const result = evaluate(expression)
     return `Result: ${result}`;
   } catch (error) {
     return `Error: Invalid expression. Please use valid math syntax.`;
