@@ -7,7 +7,6 @@ import { QdrantVectorStore } from "@langchain/qdrant";
 import { VoyageEmbeddings } from "@langchain/community/embeddings/voyage";
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
-// import { mcpClient } from "./mcpTavily.js";
 const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY });
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -23,18 +22,7 @@ const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
   collectionName: "file_collection",
 });
 
-// const toolList = await mcpClient.listTools();
-// console.log("this is the toollist",toolList);
 
-// const tools = toolList.tools.map(tool=>({
-//   type:"function",
-//   function:{
-//     name:tool.name,
-//     description: tool.description,
-//     parameters: tool.inputSchema
-//   }
-// }))
-// console.log("tools available",tools);
 
 export async function generateMain(userMsg, threadId) {
   if (!userMsg) {
@@ -177,7 +165,7 @@ Now answer the user's question.
         },
       ],
       tool_choice: "auto",
-      model: "meta-llama/llama-4-scout-17b-16e-instruct",
+      model: "llama-3.3-70b-versatile",
       temperature: 1,
     });
 
@@ -190,20 +178,7 @@ Now answer the user's question.
     if (!toolcalls) {
       return `${completions.choices[0].message.content}`;
     }
-    // for (const tool of toolcalls) {
-    //   const result = await mcpClient.callTool({
-    //     name: tool.function.name,
-    //     arguments: JSON.parse(tool.function.arguments)
-    //   });
-    //   console.log("Result",result);
-
-    //   messages.push({
-    //     tool_call_id: tool.id,
-    //     role: "tool",
-    //     name: tool.function.name,
-    //     content: result.content.map(c => c.text).join("\n\n")
-    //   });
-    // }
+   
     for (let tool of toolcalls) {
       let functionName = tool.function.name;
       let functionArguments = tool.function.arguments;
