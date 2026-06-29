@@ -253,22 +253,43 @@ async function calculate(expression) {
 async function YouTubeSearch({ query }) {
   console.log("🔍 Searching YouTube for:", query);
   const API_KEY = process.env.YOUTUBE_API_KEY;
-  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${encodeURIComponent(query)}&key=${API_KEY}&type=video&order=relevance`;
+
+  // Step 1: Search for videos (exclude music-related results)
+  const filteredQuery = `${query} -song -music -lyrics -official video`;
+  const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(filteredQuery)}&key=${API_KEY}&type=video&order=relevance`;
 
   try {
-    const response = await fetch(url);
-    const data = await response.json();
+    const searchResponse = await fetch(searchUrl);
+    const searchData = await searchResponse.json();
 
-    if (!data.items || data.items.length === 0) {
+    if (!searchData.items || searchData.items.length === 0) {
       return "No YouTube videos found for that query.";
     }
 
-    let results = `Here are the top 5 YouTube videos for "${query}":\n\n`;
-    data.items.forEach((item, index) => {
-      const title = item.snippet.title;
-      const videoId = item.id?.videoId;
-      if (!videoId) return; // skip if videoId is missing
-      const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    // Step 2: Extract video IDs and validate them (filters out deleted/private videos)
+    const videoIds = searchData.items
+      .map((item) => item.id?.videoId)
+      .filter(Boolean)
+      .join(",");
+
+    const validateUrl = `https://www.googleapis.com/youtube/v3/videos?part=status,snippet&id=${videoIds}&key=${API_KEY}`;
+    const validateResponse = await fetch(validateUrl);
+    const validateData = await validateResponse.json();
+
+    // Keep only public & embeddable videos
+    const validVideos = validateData.items.filter(
+      (v) =>
+        v.status.privacyStatus === "public" && v.status.embeddable === true
+    );
+
+    if (validVideos.length === 0) {
+      return "No accessible YouTube videos found for that query.";
+    }
+
+    let results = `Here are the top YouTube videos for "${query}":\n\n`;
+    validVideos.slice(0, 5).forEach((video, index) => {
+      const title = video.snippet.title;
+      const videoUrl = `https://www.youtube.com/watch?v=${video.id}`;
       results += `${index + 1}. **${title}**\n   Link: ${videoUrl}\n\n`;
     });
 
