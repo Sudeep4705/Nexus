@@ -254,9 +254,10 @@ async function YouTubeSearch({ query }) {
   console.log("🔍 Searching YouTube for:", query);
   const API_KEY = process.env.YOUTUBE_API_KEY;
 
-  // Step 1: Search for videos (exclude music-related results)
-  const filteredQuery = `${query} -song -music -lyrics -official video`;
-  const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(filteredQuery)}&key=${API_KEY}&type=video&order=relevance`;
+  // Blocked category IDs: 10 = Music, 24 = Entertainment
+  const BLOCKED_CATEGORIES = ["10", "24"];
+
+  const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(query)}&key=${API_KEY}&type=video&order=relevance`;
 
   try {
     const searchResponse = await fetch(searchUrl);
@@ -266,21 +267,22 @@ async function YouTubeSearch({ query }) {
       return "No YouTube videos found for that query.";
     }
 
-    // Step 2: Extract video IDs and validate them (filters out deleted/private videos)
     const videoIds = searchData.items
       .map((item) => item.id?.videoId)
       .filter(Boolean)
       .join(",");
 
+    // Fetch status + snippet (categoryId lives in snippet)
     const validateUrl = `https://www.googleapis.com/youtube/v3/videos?part=status,snippet&id=${videoIds}&key=${API_KEY}`;
     const validateResponse = await fetch(validateUrl);
     const validateData = await validateResponse.json();
 
-    // Keep only public & embeddable videos
-    const validVideos = validateData.items.filter(
-      (v) =>
-        v.status.privacyStatus === "public" && v.status.embeddable === true
-    );
+    const validVideos = validateData.items.filter((v) => {
+      const isPublic = v.status.privacyStatus === "public";
+      const isEmbeddable = v.status.embeddable === true;
+      const isNotMusic = !BLOCKED_CATEGORIES.includes(v.snippet.categoryId); // 🔑 key fix
+      return isPublic && isEmbeddable && isNotMusic;
+    });
 
     if (validVideos.length === 0) {
       return "No accessible YouTube videos found for that query.";
