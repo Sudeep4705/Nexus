@@ -165,8 +165,8 @@ Now answer the user's question.
         },
       ],
       tool_choice: "auto",
-      model: "compound-beta",
-      temperature: 1,
+      model: "llama-3.3-70b-versatile",
+      temperature: 0,
     });
 
     //pushing the assistant message
