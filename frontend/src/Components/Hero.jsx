@@ -7,6 +7,8 @@ import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import { toast } from "react-toastify";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 export default function Hero({threadId}){
   
   const fileinputRef = useRef(null)
@@ -126,7 +128,9 @@ useEffect(()=>{
                 key={index}
                 className={`rounded-xl p-3  max-w-fit ${msg.role === "user" ? "bg-neutral-200 ml-auto" : "bg-neutral-300 mr-auto"} `}
               >
-                <h1>{msg.content}</h1>
+               <ReactMarkdown remarkPlugins={[remarkGfm]}>
+    {msg.content}
+  </ReactMarkdown>
               </div>
             ))}
              {isloading && (
