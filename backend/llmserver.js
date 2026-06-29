@@ -235,7 +235,7 @@ async function YouTubeSearch({ query }) {
 
   try {
     // Step 1 – Search
-    const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(query)}&key=${API_KEY}&type=video&order=relevance`;
+    const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(query)}&key=${API_KEY}&type=video&order=relevance&videoDuration=long`;
     const searchRes = await fetch(searchUrl);
     const searchData = await searchRes.json();
 
