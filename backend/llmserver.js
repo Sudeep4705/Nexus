@@ -141,6 +141,23 @@ while(true){
       },
     },
   },
+  // 3. 👇 NEW YouTube Search
+  {
+    type: "function",
+    function: {
+      name: "YouTubeSearch",
+      description: "Search for YouTube videos by keyword and return the video links",
+      parameters: {
+        type: "object",
+        properties: {
+          query: { type: "string", description: "The search keyword for the video" },
+        },
+        required: ["query"],
+      },
+    },
+  },
+
+
 
     ],  
     tool_choice:"auto",
@@ -187,6 +204,12 @@ messages.push(completions.choices[0].message)
     const result = await calculate(JSON.parse(functionArguments));
     messages.push({ tool_call_id: tool.id, role: "tool", name: functionName, content: result });
   }
+   // YouTube handler
+  else if ("YouTubeSearch" === functionName) {
+    const args = JSON.parse(functionArguments);
+    const result = await YouTubeSearch(args);
+    messages.push({ tool_call_id: tool.id, role: "tool", name: functionName, content: result });
+  }
   }
 }
 }
@@ -206,5 +229,33 @@ async function calculate(expression) {
     return `Result: ${result}`;
   } catch (error) {
     return `Error: Invalid expression. Please use valid math syntax.`;
+  }
+}
+
+async function YouTubeSearch({ query }) {
+  console.log("🔍 Searching YouTube for:", query);
+  const API_KEY = process.env.YOUTUBE_API_KEY;
+  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${encodeURIComponent(query)}&key=${API_KEY}&type=video`;
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!data.items || data.items.length === 0) {
+      return "No YouTube videos found for that query.";
+    }
+
+    // Format the results nicely
+    let results = `Here are the top 5 YouTube videos for "${query}":\n\n`;
+    data.items.forEach((item, index) => {
+      const title = item.snippet.title;
+      const videoId = item.id.videoId;
+      const url = `https://www.youtube.com/watch?v=${videoId}`;
+      results += `${index + 1}. **${title}**\n   Link: ${url}\n\n`;
+    });
+    return results;
+  } catch (error) {
+    console.error("YouTube API error:", error);
+    return "Sorry, I couldn't fetch YouTube videos at the moment.";
   }
 }
