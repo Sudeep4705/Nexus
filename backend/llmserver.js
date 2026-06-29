@@ -173,7 +173,7 @@ Now answer the user's question.
 }
       ],
       tool_choice: "auto",
-      model: "meta-llama/llama-4-scout-17b-16e-instruct",
+      model: "llama-3.3-70b-versatile",
       temperature: 1,
     });
 
@@ -243,7 +243,6 @@ async function WebSearch({ query }) {
 
 async function calculate(expression) {
   try {
-    // Use Function constructor for safe evaluation (or use 'mathjs' library for safety)
     const result = evaluate(expression);
     return `Result: ${result}`;
   } catch (error) {
