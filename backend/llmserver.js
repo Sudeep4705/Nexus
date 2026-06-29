@@ -123,6 +123,25 @@ while(true){
           },
         },
       },
+        // 2. New Calculator tool
+  {
+    type: "function",
+    function: {
+      name: "Calculator",
+      description: "Evaluates a mathematical expression and returns the result.",
+      parameters: {
+        type: "object",
+        properties: {
+          expression: {
+            type: "string",
+            description: "The math expression to evaluate, e.g., '25 * 4' or 'sqrt(16)'",
+          },
+        },
+        required: ["expression"],
+      },
+    },
+  },
+
     ],  
     tool_choice:"auto",
     model:"meta-llama/llama-4-scout-17b-16e-instruct",
@@ -164,6 +183,10 @@ messages.push(completions.choices[0].message)
         content:toolresult
       })
     }
+     else if (functionName === "Calculator") {
+    const result = await calculate(JSON.parse(functionArguments));
+    messages.push({ tool_call_id: tool.id, role: "tool", name: functionName, content: result });
+  }
   }
 }
 }
@@ -174,4 +197,14 @@ async function WebSearch({ query }) {
     const response = await tvly.search(query)
     const finalresult = response.results.map((res)=>res.content).join('\n\n')
     return finalresult
+}
+
+async function calculate(expression) {
+  try {
+    // Use Function constructor for safe evaluation (or use 'mathjs' library for safety)
+    const result = Function(`"use strict"; return (${expression})`)();
+    return `Result: ${result}`;
+  } catch (error) {
+    return `Error: Invalid expression. Please use valid math syntax.`;
+  }
 }
