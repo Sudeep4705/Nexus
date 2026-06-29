@@ -165,7 +165,7 @@ Now answer the user's question.
         },
       ],
       tool_choice: "auto",
-      model: "llama-3.3-70b-versatile",
+      model: "compound-beta",
       temperature: 1,
     });
 
