@@ -253,7 +253,7 @@ async function calculate(expression) {
 async function YouTubeSearch({ query }) {
   console.log("🔍 Searching YouTube for:", query);
   const API_KEY = process.env.YOUTUBE_API_KEY;
-  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${encodeURIComponent(query)}&key=${API_KEY}&type=video&order=date&videoDuration=medium`;
+  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${encodeURIComponent(query)}&key=${API_KEY}&type=video&order=date&videoDuration=long`;
   try {
     const response = await fetch(url);
     const data = await response.json();
