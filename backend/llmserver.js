@@ -157,11 +157,11 @@ Now answer the user's question.
           },
         },
         // 3. NEW YouTube Search
-        {
+       {
   type: "function",
   function: {
     name: "YouTubeSearch",
-    description: "Search YouTube for videos and return real video links. Use this tool whenever the user asks for videos, tutorials, or any video content. This tool must be used; do not answer from memory.",
+    description: "CRITICAL: You MUST call this tool whenever the user asks for YouTube videos or video content. If you do not call this tool, you will fail the task. This tool returns real video links.",
     parameters: {
       type: "object",
       properties: {
