@@ -9,7 +9,7 @@ import Navbar from "./Navbar";
 import { toast } from "react-toastify";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-export default function Hero({threadId}){
+export default function Hero({threadId,triggerRefresh}){
   
   const fileinputRef = useRef(null)
   const [input, setinput] = useState("");
@@ -63,6 +63,7 @@ useEffect(()=>{
         ...prev,
         { role: "assistant", content:res.data.message },
       ]);
+      if(triggerRefresh) triggerRefresh()
       setinput("");
     } catch (error){
         toast.error(error.response.data.message)

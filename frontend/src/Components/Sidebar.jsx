@@ -4,7 +4,7 @@ import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import { Menu, X } from "lucide-react"; // install lucide-react if not already
 
-export default function Sidebar() {
+export default function Sidebar({refershKey,triggerRefresh}) {
   const [chats, setChats] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
@@ -21,11 +21,12 @@ export default function Sidebar() {
       }
     };
     fetchChats();
-  }, []);
+  }, [refershKey]);
 
   const startNewChat = () => {
     const newId = uuidv4();
     navigate(`/chat/${newId}`);
+    if(triggerRefresh) triggerRefresh();
     setIsOpen(false); // close sidebar on mobile
   };
 
