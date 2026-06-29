@@ -161,11 +161,11 @@ while(true){
     },
   },
   // 3. NEW YouTube Search
-{
+ {
   type: "function",
   function: {
     name: "YouTubeSearch",
-    description: "Search for YouTube videos by keyword and return the actual video links. Use this for any question about finding YouTube videos, tutorials, or content.",
+    description: "ALWAYS use this tool when the user asks for YouTube videos, tutorials, or video content. This is the ONLY way to get actual YouTube video links.",
     parameters: {
       type: "object",
       properties: {
@@ -175,8 +175,6 @@ while(true){
     },
   },
 }
-
-
 
     ],  
     tool_choice:"auto",
