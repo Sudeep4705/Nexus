@@ -1,29 +1,27 @@
 import dotenv from "dotenv";
 dotenv.config();
-import Groq from "groq-sdk"
+import Groq from "groq-sdk";
 import { tavily } from "@tavily/core";
-import { evaluate } from 'mathjs';
+import { evaluate } from "mathjs";
 import { QdrantVectorStore } from "@langchain/qdrant";
-import { VoyageEmbeddings } from "@langchain/community/embeddings/voyage"
-import { PrismaClient } from '@prisma/client';
+import { VoyageEmbeddings } from "@langchain/community/embeddings/voyage";
+import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 // import { mcpClient } from "./mcpTavily.js";
-const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY })
+const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY });
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const embeddings = new VoyageEmbeddings({
   apiKey: process.env.VOYAGE_API_KEY,
-  model: "voyage-3-lite", 
-  inputType: "document"
+  model: "voyage-3-lite",
+  inputType: "document",
 });
 
 const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
-  url:process.env.QDRANT_URL,
-  apiKey:process.env.QDRANT_API_KEY,
+  url: process.env.QDRANT_URL,
+  apiKey: process.env.QDRANT_API_KEY,
   collectionName: "file_collection",
 });
-
-
 
 // const toolList = await mcpClient.listTools();
 // console.log("this is the toollist",toolList);
@@ -38,25 +36,23 @@ const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
 // }))
 // console.log("tools available",tools);
 
-
-
-export async function generateMain(userMsg,threadId){
-  if(!userMsg){
-    return "Please ask the valid question"
+export async function generateMain(userMsg, threadId) {
+  if (!userMsg) {
+    return "Please ask the valid question";
   }
 
-  const chat =  await prisma.chat.findUnique({
-    where:{
-      threadId
+  const chat = await prisma.chat.findUnique({
+    where: {
+      threadId,
     },
-    include:{
-      messages:{orderBy:{createdAt:"asc"}}
-    }
-  })
-  const history  = chat?chat.messages:[]
-    const relevantchunks = await vectorStore.similaritySearch(userMsg,3)
-    const context = relevantchunks.map((chunk)=>chunk.pageContent).join('\n\n')
-    const sysPrompt = `SYSTEM OVERRIDE: You are a helpful assistant with access to tools and a knowledge base.
+    include: {
+      messages: { orderBy: { createdAt: "asc" } },
+    },
+  });
+  const history = chat ? chat.messages : [];
+  const relevantchunks = await vectorStore.similaritySearch(userMsg, 3);
+  const context = relevantchunks.map((chunk) => chunk.pageContent).join("\n\n");
+  const sysPrompt = `SYSTEM OVERRIDE: You are a helpful assistant with access to tools and a knowledge base.
 
 ## DECISION PROCESS (Follow this order)
 1. **Check the context** (provided with every question). If it contains the answer → use it silently.
@@ -105,144 +101,150 @@ Love is a deep emotional connection involving affection, care, and attachment.
 Now answer the user's question.
 `;
 
-    const userQuery = `Question:${userMsg} Relevant context:${context}
-    IMPORTANT: You have been given permission to use this internal data. Do not refuse to answer.`
-     const messages = [
-    { role: "system", content: sysPrompt},
+  const userQuery = `Question:${userMsg} Relevant context:${context}
+    IMPORTANT: You have been given permission to use this internal data. Do not refuse to answer.`;
+  const messages = [
+    { role: "system", content: sysPrompt },
     ...history.map((m) => ({ role: m.role, content: m.content })),
     { role: "user", content: userQuery },
   ];
 
-
-
-const Max_Entries = 10
-let count = 0
-while(true){
-  if(count>Max_Entries){
-    return "I could not find the result, Plese try again"
-  }
-  count++
-     const completions = await groq.chat.completions.create({
-    messages: messages,
-    tools: [
-      {
-        type: "function",
-        function: {
-          name: "WebSearch",
-          description: "Search the latest and real time data on the internet",
-          parameters: {
-            type: "object",
-            properties: {
-              query: {
-                type: "string",
-                description: "The search query to perform search on",
+  const Max_Entries = 10;
+  let count = 0;
+  while (true) {
+    if (count > Max_Entries) {
+      return "I could not find the result, Plese try again";
+    }
+    count++;
+    const completions = await groq.chat.completions.create({
+      messages: messages,
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "WebSearch",
+            description: "Search the latest and real time data on the internet",
+            parameters: {
+              type: "object",
+              properties: {
+                query: {
+                  type: "string",
+                  description: "The search query to perform search on",
+                },
               },
+              required: ["query"],
             },
-            required: ["query"],
           },
         },
-      },
-    // 2. New Calculator tool
-  {
-    type: "function",
-    function: {
-      name: "Calculator",
-      description: "Evaluates a mathematical expression and returns the result.",
-      parameters: {
-        type: "object",
-        properties: {
-          expression: {
-            type: "string",
-            description: "The math expression to evaluate, e.g., '25 * 4' or 'sqrt(16)'",
+        // 2. New Calculator tool
+        {
+          type: "function",
+          function: {
+            name: "Calculator",
+            description:
+              "Evaluates a mathematical expression and returns the result.",
+            parameters: {
+              type: "object",
+              properties: {
+                expression: {
+                  type: "string",
+                  description:
+                    "The math expression to evaluate, e.g., '25 * 4' or 'sqrt(16)'",
+                },
+              },
+              required: ["expression"],
+            },
           },
         },
-        required: ["expression"],
-      },
-    },
-  },
-  // 3. NEW YouTube Search
- {
+        // 3. NEW YouTube Search
+       {
   type: "function",
   function: {
     name: "YouTubeSearch",
-    description: "ALWAYS use this tool when the user asks for YouTube videos, tutorials, or video content. This is the ONLY way to get actual YouTube video links.",
+    description: "ALWAYS use this tool when the user asks for YouTube videos, tutorials, or any video content. This tool will return real video links. Do NOT answer from your own knowledge.",
     parameters: {
       type: "object",
       properties: {
-        query: { type: "string", description: "The search keyword for the video" },
+        query: { type: "string", description: "The search keyword for the video" }
       },
-      required: ["query"],
-    },
-  },
-}
-
-    ],  
-    tool_choice:"auto",
-    model:"meta-llama/llama-4-scout-17b-16e-instruct",
-    temperature: 1,
-  });
-
-//pushing the assistant message
-messages.push(completions.choices[0].message)
-
-  const toolcalls = completions.choices[0].message.tool_calls;
-//   console.log(toolcalls);
-  
-  if (!toolcalls){
-    return `${completions.choices[0].message.content}`
-  }
-  // for (const tool of toolcalls) {
-  //   const result = await mcpClient.callTool({
-  //     name: tool.function.name,
-  //     arguments: JSON.parse(tool.function.arguments)
-  //   });
-  //   console.log("Result",result);
-    
-  //   messages.push({
-  //     tool_call_id: tool.id,
-  //     role: "tool",
-  //     name: tool.function.name,
-  //     content: result.content.map(c => c.text).join("\n\n")
-  //   });
-  // } 
-  for (let tool of toolcalls) {
-    let functionName = tool.function.name;
-    let functionArguments = tool.function.arguments;
-    if ("WebSearch" === functionName) {
-      const toolresult = await WebSearch(JSON.parse(functionArguments));
-      messages.push({
-        tool_call_id:tool.id,
-        role:'tool',
-        name:functionName,
-        content:toolresult
-      })
+      required: ["query"]
     }
-     else if (functionName === "Calculator") {
-    const result = await calculate(JSON.parse(functionArguments));
-    messages.push({ tool_call_id: tool.id, role: "tool", name: functionName, content: result });
-  }
-   // YouTube handler
-  else if ("YouTubeSearch" === functionName) {
-    const args = JSON.parse(functionArguments);
-    const result = await YouTubeSearch(args);
-    messages.push({ tool_call_id: tool.id, role: "tool", name: functionName, content: result });
-  }
   }
 }
-}
+      ],
+      tool_choice: "auto",
+      model: "meta-llama/llama-4-scout-17b-16e-instruct",
+      temperature: 1,
+    });
 
+    //pushing the assistant message
+    messages.push(completions.choices[0].message);
+
+    const toolcalls = completions.choices[0].message.tool_calls;
+    //   console.log(toolcalls);
+
+    if (!toolcalls) {
+      return `${completions.choices[0].message.content}`;
+    }
+    // for (const tool of toolcalls) {
+    //   const result = await mcpClient.callTool({
+    //     name: tool.function.name,
+    //     arguments: JSON.parse(tool.function.arguments)
+    //   });
+    //   console.log("Result",result);
+
+    //   messages.push({
+    //     tool_call_id: tool.id,
+    //     role: "tool",
+    //     name: tool.function.name,
+    //     content: result.content.map(c => c.text).join("\n\n")
+    //   });
+    // }
+    for (let tool of toolcalls) {
+      let functionName = tool.function.name;
+      let functionArguments = tool.function.arguments;
+      if ("WebSearch" === functionName) {
+        const toolresult = await WebSearch(JSON.parse(functionArguments));
+        messages.push({
+          tool_call_id: tool.id,
+          role: "tool",
+          name: functionName,
+          content: toolresult,
+        });
+      } else if (functionName === "Calculator") {
+        const result = await calculate(JSON.parse(functionArguments));
+        messages.push({
+          tool_call_id: tool.id,
+          role: "tool",
+          name: functionName,
+          content: result,
+        });
+      }
+      // YouTube handler
+      else if ("YouTubeSearch" === functionName) {
+        const result = await YouTubeSearch(JSON.parse(functionArguments));
+        messages.push({
+          tool_call_id: tool.id,
+          role: "tool",
+          name: functionName,
+          content: result,
+        });
+      }
+    }
+  }
+}
 
 async function WebSearch({ query }) {
-    console.log("Calling the tool......");
-    const response = await tvly.search(query)
-    const finalresult = response.results.map((res)=>res.content).join('\n\n')
-    return finalresult
+  console.log("Calling the tool......");
+  const response = await tvly.search(query);
+  const finalresult = response.results.map((res) => res.content).join("\n\n");
+  return finalresult;
 }
 
 async function calculate(expression) {
   try {
     // Use Function constructor for safe evaluation (or use 'mathjs' library for safety)
-    const result = evaluate(expression)
+    const result = evaluate(expression);
     return `Result: ${result}`;
   } catch (error) {
     return `Error: Invalid expression. Please use valid math syntax.`;
