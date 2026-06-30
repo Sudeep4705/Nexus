@@ -104,21 +104,21 @@ const handlechatdelete = async(threadId)=>{
   >
     <Ellipsis size={18} />
   </button>
-  {menuOpenFor === chat.threadId && (
-    <div className="absolute right-0 top-full mt-1 w-32 bg-neutral-800 rounded-lg shadow-lg z-10">
-      <button
-        onClick={() => {
-          // handle delete
-          handlechatdelete(chat.threadId)
-          setMenuOpenFor(null);
-        }}
-        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-400 hover:bg-neutral-700 rounded-lg"
-      >
-        <Trash2 size={16} />
-        Delete
-      </button>
-    </div>
-  )}
+ {menuOpenFor === chat.threadId && (
+  <div className="absolute right-0 top-full mt-1 w-32 bg-neutral-800 rounded-lg shadow-lg z-10 border border-neutral-700">
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        setMenuOpenFor(null);
+        handleDeleteChat(chat.threadId);
+      }}
+      className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-400 hover:bg-neutral-700 rounded-lg transition"
+    >
+      <Trash2 size={16} />
+      <span>Delete</span>
+    </button>
+  </div>
+)}
 </div>
         ))}
       </div>
