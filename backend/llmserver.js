@@ -3,7 +3,7 @@ dotenv.config();
 import Groq from "groq-sdk";
 import { tavily } from "@tavily/core";
 import { evaluate, log } from "mathjs";
-import wiki from 'wikipedia';
+import wiki from "wikipedia";
 import { QdrantVectorStore } from "@langchain/qdrant";
 import { VoyageEmbeddings } from "@langchain/community/embeddings/voyage";
 import { PrismaClient } from "@prisma/client";
@@ -22,8 +22,6 @@ const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
   apiKey: process.env.QDRANT_API_KEY,
   collectionName: "file_collection",
 });
-
-
 
 export async function generateMain(userMsg, threadId) {
   if (!userMsg) {
@@ -171,39 +169,50 @@ Now answer the user's question.
         },
         // wikipedia
         {
-  type: "function",
-  function: {
-    name: "WikipediaSearch",
-    description: "Search Wikipedia for a topic and return a summary. Use this for historical figures, definitions, concepts, and general knowledge.",
-    parameters: {
-      type: "object",
-      properties: {
-        query: { type: "string", description: "The topic to search for on Wikipedia" }
-      },
-      required: ["query"]
-    }
-  }
-}
-,
-// remote job 
-{
-  type: "function",
-  function: {
-    name: "RemoteJobs",
-    description: "Search for remote jobs worldwide. Use this for job search, remote work, or finding companies hiring.",
-    parameters: {
-      type: "object",
-      properties: {
-        query: { type: "string", description: "Job role or keyword e.g., 'React Developer', 'Data Analyst'" },
-        country: { type: "string", description: "Country code e.g., 'IN', 'US', 'GB' (optional)" }
-      },
-      required: ["query"]
-    }
-  }
-}
+          type: "function",
+          function: {
+            name: "WikipediaSearch",
+            description:
+              "Search Wikipedia for a topic and return a summary. Use this for historical figures, definitions, concepts, and general knowledge.",
+            parameters: {
+              type: "object",
+              properties: {
+                query: {
+                  type: "string",
+                  description: "The topic to search for on Wikipedia",
+                },
+              },
+              required: ["query"],
+            },
+          },
+        },
+        // remote job
+        {
+          type: "function",
+          function: {
+            name: "RemoteJobs",
+            description:
+              "Search for remote jobs worldwide. Use this for job search, remote work, or finding companies hiring.",
+            parameters: {
+              type: "object",
+              properties: {
+                query: {
+                  type: "string",
+                  description:
+                    "Job role or keyword e.g., 'React Developer', 'Data Analyst'",
+                },
+                country: {
+                  type: "string",
+                  description: "Country code e.g., 'IN', 'US', 'GB' (optional)",
+                },
+              },
+              required: ["query"],
+            },
+          },
+        },
       ],
       tool_choice: "auto",
-      model:"openai/gpt-oss-20b",
+      model: "openai/gpt-oss-20b",
       temperature: 0,
     });
 
@@ -216,7 +225,7 @@ Now answer the user's question.
     if (!toolcalls) {
       return `${completions.choices[0].message.content}`;
     }
-   
+
     for (let tool of toolcalls) {
       let functionName = tool.function.name;
       let functionArguments = tool.function.arguments;
@@ -249,24 +258,25 @@ Now answer the user's question.
       }
       // wikipedia
       else if (functionName === "WikipediaSearch") {
-  const args = JSON.parse(functionArguments);
-  const result = await WikipediaSearch(args);
-  messages.push({
-    tool_call_id: tool.id,
-    role: "tool",
-    name: functionName,
-    content: result,
-  });
-}else if (functionName === "RemoteJobs") {
-  const args = JSON.parse(functionArguments);
-  const result = await RemoteJobs(args);
-  messages.push({
-    tool_call_id: tool.id,
-    role: "tool",
-    name: functionName,
-    content: result,
-  });
-}
+        const args = JSON.parse(functionArguments);
+        const result = await WikipediaSearch(args);
+        messages.push({
+          tool_call_id: tool.id,
+          role: "tool",
+          name: functionName,
+          content: result,
+        });
+        // remote jobs
+      } else if (functionName === "RemoteJobs") {
+        const args = JSON.parse(functionArguments);
+        const result = await RemoteJobs(args);
+        messages.push({
+          tool_call_id: tool.id,
+          role: "tool",
+          name: functionName,
+          content: result,
+        });
+      }
     }
   }
 }
@@ -313,22 +323,22 @@ async function YouTubeSearch({ query }) {
   }
 }
 
-
-async function WikipediaSearch({query}) {
+async function WikipediaSearch({ query }) {
   console.log("searching wikipedia");
-  try{
-    const page = await wiki.page(query)
+  try {
+    const page = await wiki.page(query);
     console.log(page);
     const summary = await page.summary();
     console.log(summary);
     return `**${summary.title}**\n\n${summary.extract}`;
-  }catch (error) {
+  } catch (error) {
     return `Sorry, I couldn't find anything on Wikipedia for "${query}".`;
   }
 }
 
-
 async function RemoteJobs({ query, country }) {
+  console.log("searching for jobs");
+  
   try {
     const url = `https://himalayas.app/api/jobs?search=${encodeURIComponent(query)}&limit=5`;
     const res = await fetch(url);
@@ -347,7 +357,7 @@ async function RemoteJobs({ query, country }) {
     });
     return result;
   } catch (error) {
-    console.error('RemoteJobs error:', error);
-    return 'Sorry, I could not fetch job listings.';
+    console.error("RemoteJobs error:", error);
+    return "Sorry, I could not fetch job listings.";
   }
 }
