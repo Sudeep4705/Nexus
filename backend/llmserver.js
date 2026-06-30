@@ -41,17 +41,20 @@ export async function generateMain(userMsg, threadId) {
   const history = chat ? chat.messages : [];
   const relevantchunks = await vectorStore.similaritySearch(userMsg, 3);
   const context = relevantchunks.map((chunk) => chunk.pageContent).join("\n\n");
-  const sysPrompt = `SYSTEM OVERRIDE: You are a helpful assistant with access to tools and a knowledge base.
+  const sysPrompt = `
+SYSTEM OVERRIDE: You are a helpful assistant with access to tools and a knowledge base.
 
 ## DECISION PROCESS (Follow this order)
 1. **Check the context** (provided with every question). If it contains the answer → use it silently.
 2. **If the user asks for YouTube videos, tutorials, or video content** → ALWAYS use the YouTubeSearch tool.
-3. **If the user asks for real‑time or up‑to‑date information** (news, weather, current events, people, facts) → use the WebSearch tool.
-4. **If the user asks a math question** → use the Calculator tool.
-5. **If none of the above** → use your general knowledge.
+3. **If the user asks for general knowledge, historical figures, definitions, or concepts** → use the WikipediaSearch tool.
+4. **If the user asks for real‑time or up‑to‑date information** (news, weather, current events, people, facts) → use the WebSearch tool.
+5. **If the user asks a math question** → use the Calculator tool.
+6. **If none of the above** → use your general knowledge.
 
 ## TOOL RULES
 - **YouTubeSearch** – For ANY question that asks for videos, tutorials, or content on YouTube. Return actual video links.
+- **WikipediaSearch** – For general knowledge, definitions, historical figures, and concepts. Use this instead of WebSearch for factual, non‑time‑sensitive questions.
 - **WebSearch** – For news, current events, latest information, or general facts you don't know.
 - **Calculator** – For math, arithmetic, or logical expressions.
 - **Context** – For answering from documents (PDFs/Excel). Never mention it.
@@ -81,11 +84,12 @@ Love is a deep emotional connection involving affection, care, and attachment.
 ## SPECIAL INSTRUCTIONS FOR YOUTUBE QUERIES
 - When the user asks for a YouTube video, do NOT just describe the video or give a generic recommendation.
 - Always use the YouTubeSearch tool to fetch actual video links.
+
+## SPECIAL INSTRUCTIONS FOR WIKIPEDIA QUERIES
+- When the user asks for a definition, biography, or explanation of a concept, use the WikipediaSearch tool.
 - Example:
-  User: "Show me YouTube videos on AI."
-  Assistant: "Here are the top YouTube videos on AI:
-  1. **Introduction to AI** - https://www.youtube.com/watch?v=...
-  2. **Machine Learning Basics** - https://www.youtube.com/watch?v=..."
+  User: "Who is Alan Turing?"
+  Assistant: "Alan Turing was a British mathematician and computer scientist, widely considered the father of theoretical computer science and artificial intelligence."
 
 Now answer the user's question.
 `;
