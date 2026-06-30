@@ -86,8 +86,8 @@ export default function Sidebar({refershKey,triggerRefresh}) {
                 <Ellipsis onClick={()=>setdeletebtn(true)}/>
                   {deletebtn && (
                     <>
-                    <div className="w-10">
-                      <Trash2 color="red"/>
+                    <div className="w-10 p-20 bg-neutral-500">
+                      <Trash2 size={20} color="red"/>
                     </div>
                     </>
                   )}
