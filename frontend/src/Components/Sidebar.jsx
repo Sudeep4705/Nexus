@@ -9,6 +9,7 @@ export default function Sidebar({refershKey,triggerRefresh}) {
   const [chats, setChats] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [deletebtn,setdeletebtn] = useState(false)
+  const [menuOpenFor, setMenuOpenFor] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
