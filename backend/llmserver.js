@@ -165,7 +165,7 @@ Now answer the user's question.
         },
       ],
       tool_choice: "auto",
-      model: "llama-3.3-70b-versatile",
+      model: "gemma2-9b-it",
       temperature: 0,
     });
 
@@ -237,6 +237,8 @@ async function YouTubeSearch({ query }) {
   try {
     const response = await fetch(url);
     const data = await response.json();
+    console.log(data);
+    
 
     if (!data.items || data.items.length === 0) {
       return "No YouTube videos found for that query.";
