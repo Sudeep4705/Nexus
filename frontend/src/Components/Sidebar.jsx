@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
-import { Menu, X, Ellipsis,Trash2  } from "lucide-react"; // install lucide-react if not already
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-export default function Sidebar({refershKey,triggerRefresh}) {
+import { Menu, X, Trash2 } from "lucide-react";
+
+export default function Sidebar({ refreshKey, triggerRefresh }) {
   const [chats, setChats] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [deletebtn,setdeletebtn] = useState(false)
+  const [hoveredChatId, setHoveredChatId] = useState(null); // track which chat is hovered
+  const [confirmDelete, setConfirmDelete] = useState(null); // store threadId to delete
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,34 +23,50 @@ export default function Sidebar({refershKey,triggerRefresh}) {
       }
     };
     fetchChats();
-  }, [refershKey]);
+  }, [refreshKey]);
 
   const startNewChat = () => {
     const newId = uuidv4();
     navigate(`/chat/${newId}`);
-    if(triggerRefresh) triggerRefresh();
-    setIsOpen(false); // close sidebar on mobile
+    if (triggerRefresh) triggerRefresh();
+    setIsOpen(false);
   };
 
   const goToChat = (threadId) => {
     navigate(`/chat/${threadId}`);
-    setIsOpen(false); // close sidebar on mobile
+    setIsOpen(false);
+  };
+
+  const handleDelete = async (threadId) => {
+    try {
+      await axios.delete(`https://nexus-foq8.onrender.com/chats/${threadId}`, {
+        withCredentials: true,
+      });
+      // Refresh the list
+      if (triggerRefresh) triggerRefresh();
+      // If the deleted chat is the current one, navigate to new chat
+      // (you can add logic to check current threadId)
+      setConfirmDelete(null);
+    } catch (error) {
+      console.error("Delete failed", error);
+    }
   };
 
   const stripMarkdown = (text) => {
-  return text
-    .replace(/\*\*(.*?)\*\*/g, '$1') // bold
-    .replace(/\*(.*?)\*/g, '$1') // italic
-    .replace(/## /g, '') // headings
-    .replace(/# /g, '') // headings
-    .replace(/```.*?```/gs, '') // code blocks
-    .replace(/`(.*?)`/g, '$1') // inline code
-    .trim();
-};
+    if (!text) return "";
+    return text
+      .replace(/\*\*(.*?)\*\*/g, "$1")
+      .replace(/\*(.*?)\*/g, "$1")
+      .replace(/## /g, "")
+      .replace(/# /g, "")
+      .replace(/```.*?```/gs, "")
+      .replace(/`(.*?)`/g, "$1")
+      .trim();
+  };
 
   return (
     <>
-      {/* Toggle button*/}
+      {/* Toggle button for mobile */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="fixed top-4 left-4 z-50 md:hidden bg-neutral-800 text-white p-2 rounded-lg shadow-lg hover:bg-neutral-700 transition"
@@ -77,31 +93,62 @@ export default function Sidebar({refershKey,triggerRefresh}) {
         {chats.map((chat) => (
           <div
             key={chat.threadId}
-            onClick={() => goToChat(chat.threadId)}
-            className="p-3 rounded-lg cursor-pointer mb-2 transition-colors bg-neutral-700 text-white hover:bg-neutral-600 flex"
+            className="group relative p-3 rounded-lg cursor-pointer mb-2 transition-colors bg-neutral-700 text-white hover:bg-neutral-600 flex items-center justify-between"
+            onMouseEnter={() => setHoveredChatId(chat.threadId)}
+            onMouseLeave={() => setHoveredChatId(null)}
           >
-            <div className="w-80">
-               {stripMarkdown(chat.messages[0]?.content)?.slice(0, 30) || "New chat"}
+            <div className="flex-1 truncate" onClick={() => goToChat(chat.threadId)}>
+              {stripMarkdown(chat.messages[0]?.content)?.slice(0, 30) || "New chat"}
             </div>
-                <Ellipsis onClick={()=>setdeletebtn(true)}/>
-                  {deletebtn && (
-                    <>
-                    <div className="w-2xs p-2 mt-5 mr-5 bg-neutral-500 rounded-2xl justify-center flex items-center">
-                      <Trash2 size={15} color="red"/>
-                      <p className="text-xs">Delete</p>
-                    </div>
-                    </>
-                  )}
+            {/* Trash icon – appears on hover */}
+            {hoveredChatId === chat.threadId && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setConfirmDelete(chat.threadId);
+                }}
+                className="ml-2 p-1 rounded-full hover:bg-red-500/20 text-gray-400 hover:text-red-500 transition"
+                aria-label="Delete chat"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
           </div>
         ))}
       </div>
 
-      {/* Overlay – closes sidebar when clicked on mobile */}
+      {/* Overlay for mobile */}
       {isOpen && (
         <div
           className="fixed inset-0 z-30 bg-black/50 md:hidden"
           onClick={() => setIsOpen(false)}
         />
+      )}
+
+      {/* Delete confirmation modal */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-neutral-800 p-6 rounded-xl max-w-sm w-full mx-4">
+            <h3 className="text-white text-lg font-semibold mb-2">Delete Chat?</h3>
+            <p className="text-gray-400 text-sm mb-4">
+              This conversation will be permanently removed. This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmDelete(null)}
+                className="px-4 py-2 rounded-lg bg-neutral-700 text-white hover:bg-neutral-600 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDelete(confirmDelete)}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
