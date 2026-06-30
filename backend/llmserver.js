@@ -284,6 +284,7 @@ async function YouTubeSearch({ query }) {
 
 
 async function WikipediaSearch({query}) {
+  console.log("searching wikipedia");
   try{
     const page = await wiki.page(query)
     console.log(page);
