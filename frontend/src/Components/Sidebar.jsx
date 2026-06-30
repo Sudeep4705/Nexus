@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
-import { Menu, X } from "lucide-react"; // install lucide-react if not already
+import { Menu, X, Ellipsis } from "lucide-react"; // install lucide-react if not already
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 export default function Sidebar({refershKey,triggerRefresh}) {
@@ -79,10 +79,8 @@ export default function Sidebar({refershKey,triggerRefresh}) {
             onClick={() => goToChat(chat.threadId)}
             className="p-3 rounded-lg cursor-pointer mb-2 transition-colors bg-neutral-700 text-white hover:bg-neutral-600"
           >
-          
-              {stripMarkdown(chat.messages[0]?.content)?.slice(0, 30) || "New chat"}
-    
-            
+                <Ellipsis/>
+               {stripMarkdown(chat.messages[0]?.content)?.slice(0, 30) || "New chat"}
           </div>
         ))}
       </div>

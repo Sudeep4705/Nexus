@@ -214,23 +214,24 @@ Now answer the user's question.
         },
         // game dice roll
         {
-  type: "function",
-  function: {
-    name: "RollDice",
-    description: "Roll a dice (1–6) or flip a coin (Heads/Tails) for random decisions or games.",
-    parameters: {
-      type: "object",
-      properties: {
-        type: {
-          type: "string",
-          enum: ["dice", "coin"],
-          description: "Choose 'dice' or 'coin'"
-        }
-      },
-      required: ["type"]
-    }
-  }
-}
+          type: "function",
+          function: {
+            name: "RollDice",
+            description:
+              "Roll a dice (1–6) or flip a coin (Heads/Tails) for random decisions or games.",
+            parameters: {
+              type: "object",
+              properties: {
+                type: {
+                  type: "string",
+                  enum: ["dice", "coin"],
+                  description: "Choose 'dice' or 'coin'",
+                },
+              },
+              required: ["type"],
+            },
+          },
+        },
       ],
       tool_choice: "auto",
       model: "openai/gpt-oss-20b",
@@ -298,21 +299,23 @@ Now answer the user's question.
           content: result,
         });
       }
+      // roll dice
       else if (functionName === "RollDice") {
-  const args = JSON.parse(functionArguments);
-  let result;
-  if (args.type === "coin") {
-    result = Math.random() > 0.5 ? "Heads" : "Tails";
-  } else { // dice
-    result = Math.floor(Math.random() * 6) + 1;
-  }
-  messages.push({
-    tool_call_id: tool.id,
-    role: "tool",
-    name: functionName,
-    content: `🎲 Result: ${result}`
-  });
-}
+        const args = JSON.parse(functionArguments);
+        let result;
+        if (args.type === "coin") {
+          result = Math.random() > 0.5 ? "Heads" : "Tails";
+        } else {
+          // dice
+          result = Math.floor(Math.random() * 6) + 1;
+        }
+        messages.push({
+          tool_call_id: tool.id,
+          role: "tool",
+          name: functionName,
+          content: `🎲 Result: ${result}`,
+        });
+      }
     }
   }
 }
@@ -372,7 +375,6 @@ async function WikipediaSearch({ query }) {
   }
 }
 
-
 async function RemoteJobs({ query, country }) {
   try {
     // Use Remotive's public API (no key needed, returns JSON)
@@ -391,7 +393,7 @@ async function RemoteJobs({ query, country }) {
     });
     return result;
   } catch (error) {
-    console.error('RemoteJobs error:', error);
-    return 'Sorry, I could not fetch job listings.';
+    console.error("RemoteJobs error:", error);
+    return "Sorry, I could not fetch job listings.";
   }
 }
