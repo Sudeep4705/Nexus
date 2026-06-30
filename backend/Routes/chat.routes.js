@@ -147,4 +147,18 @@ router.get("/",validate,async(req,res)=>{
   }
 })
 
+router.delete("/:threadId", validate, async (req, res) => {
+  const { threadId } = req.params;
+  try {
+    const chat = await prisma.chat.findUnique({ where: { threadId } });
+    if (!chat) return res.status(404).json({ error: "Chat not found" });
+    if (chat.userId !== req.user.id) return res.status(403).json({ error: "Unauthorized" });
+    await prisma.chat.delete({ where: { threadId } });
+    res.json({ message: "Chat deleted" });
+  } catch (error) {
+    console.error("Delete error:", error);
+    res.status(500).json({ error: "Failed to delete chat" });
+  }
+});
+
 export default router

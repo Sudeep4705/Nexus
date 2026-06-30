@@ -5,10 +5,10 @@ import { v4 as uuidv4 } from "uuid";
 import { Menu, X, Ellipsis,Trash2  } from "lucide-react"; // install lucide-react if not already
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { toast } from "react-toastify";
 export default function Sidebar({refershKey,triggerRefresh}) {
   const [chats, setChats] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [deletebtn,setdeletebtn] = useState(false)
   const [menuOpenFor, setMenuOpenFor] = useState(null);
   const navigate = useNavigate();
 
@@ -51,11 +51,13 @@ export default function Sidebar({refershKey,triggerRefresh}) {
 
 const handlechatdelete = async(threadId)=>{
   try {
-      await axios.delete(`https://nexus-foq8.onrender.com/chats/${threadId}`, {
+      const res = await axios.delete(`https://nexus-foq8.onrender.com/chats/${threadId}`, {
         withCredentials: true,
       });
+      toast.success(res.data.message)
       if (triggerRefresh) triggerRefresh();
     } catch (error) {
+      toast.error(error.response.data.message)
       console.error("Delete failed", error);
     }
 }
