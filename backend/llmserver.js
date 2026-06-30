@@ -165,7 +165,7 @@ Now answer the user's question.
         },
       ],
       tool_choice: "auto",
-      model: "gemma2-9b-it",
+      model:"openai/gpt-oss-20b",
       temperature: 0,
     });
 
