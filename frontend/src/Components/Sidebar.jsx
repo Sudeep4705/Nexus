@@ -49,6 +49,16 @@ export default function Sidebar({refershKey,triggerRefresh}) {
     .trim();
 };
 
+const handlechatdelete = async(threadId)=>{
+  try {
+      await axios.delete(`https://nexus-foq8.onrender.com/chats/${threadId}`, {
+        withCredentials: true,
+      });
+      if (triggerRefresh) triggerRefresh();
+    } catch (error) {
+      console.error("Delete failed", error);
+    }
+}
   return (
     <>
       {/* Toggle button*/}
@@ -97,8 +107,8 @@ export default function Sidebar({refershKey,triggerRefresh}) {
       <button
         onClick={() => {
           // handle delete
+          handlechatdelete(chat.threadId)
           setMenuOpenFor(null);
-          // call delete function with chat.threadId
         }}
         className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-400 hover:bg-neutral-700 rounded-lg"
       >
