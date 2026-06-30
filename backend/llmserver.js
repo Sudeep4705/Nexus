@@ -51,6 +51,7 @@ SYSTEM OVERRIDE: You are a helpful assistant with access to tools and a knowledg
 4. **If the user asks for real‑time or up‑to‑date information** (news, weather, current events, people, facts) → use the WebSearch tool.
 5. **If the user asks a math question** → use the Calculator tool.
 6. **If none of the above** → use your general knowledge.
+7. **If the user asks for jobs, remote work, or companies hiring** → use the RemoteJobs tool.
 
 ## TOOL RULES
 - **YouTubeSearch** – For ANY question that asks for videos, tutorials, or content on YouTube. Return actual video links.
@@ -183,6 +184,23 @@ Now answer the user's question.
     }
   }
 }
+,
+// remote job 
+{
+  type: "function",
+  function: {
+    name: "RemoteJobs",
+    description: "Search for remote jobs worldwide. Use this for job search, remote work, or finding companies hiring.",
+    parameters: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "Job role or keyword e.g., 'React Developer', 'Data Analyst'" },
+        country: { type: "string", description: "Country code e.g., 'IN', 'US', 'GB' (optional)" }
+      },
+      required: ["query"]
+    }
+  }
+}
       ],
       tool_choice: "auto",
       model:"openai/gpt-oss-20b",
@@ -233,6 +251,15 @@ Now answer the user's question.
       else if (functionName === "WikipediaSearch") {
   const args = JSON.parse(functionArguments);
   const result = await WikipediaSearch(args);
+  messages.push({
+    tool_call_id: tool.id,
+    role: "tool",
+    name: functionName,
+    content: result,
+  });
+}else if (functionName === "RemoteJobs") {
+  const args = JSON.parse(functionArguments);
+  const result = await RemoteJobs(args);
   messages.push({
     tool_call_id: tool.id,
     role: "tool",
@@ -297,5 +324,30 @@ async function WikipediaSearch({query}) {
     return `**${summary.title}**\n\n${summary.extract}`;
   }catch (error) {
     return `Sorry, I couldn't find anything on Wikipedia for "${query}".`;
+  }
+}
+
+
+async function RemoteJobs({ query, country }) {
+  try {
+    const url = `https://himalayas.app/api/jobs?search=${encodeURIComponent(query)}&limit=5`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!data.jobs || data.jobs.length === 0) {
+      return `No remote jobs found for "${query}".`;
+    }
+
+    let result = `Here are some remote jobs for "${query}":\n\n`;
+    data.jobs.slice(0, 5).forEach((job, i) => {
+      result += `${i + 1}. **${job.title}**\n`;
+      result += `   Company: ${job.company}\n`;
+      if (job.salary) result += `   Salary: ${job.salary}\n`;
+      result += `   Apply: ${job.url}\n\n`;
+    });
+    return result;
+  } catch (error) {
+    console.error('RemoteJobs error:', error);
+    return 'Sorry, I could not fetch job listings.';
   }
 }
