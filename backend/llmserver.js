@@ -2,7 +2,8 @@ import dotenv from "dotenv";
 dotenv.config();
 import Groq from "groq-sdk";
 import { tavily } from "@tavily/core";
-import { evaluate } from "mathjs";
+import { evaluate, log } from "mathjs";
+import wiki from 'wikipedia';
 import { QdrantVectorStore } from "@langchain/qdrant";
 import { VoyageEmbeddings } from "@langchain/community/embeddings/voyage";
 import { PrismaClient } from "@prisma/client";
@@ -163,6 +164,21 @@ Now answer the user's question.
             },
           },
         },
+        // wikipedia
+        {
+  type: "function",
+  function: {
+    name: "WikipediaSearch",
+    description: "Search Wikipedia for a topic and return a summary. Use this for historical figures, definitions, concepts, and general knowledge.",
+    parameters: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "The topic to search for on Wikipedia" }
+      },
+      required: ["query"]
+    }
+  }
+}
       ],
       tool_choice: "auto",
       model:"openai/gpt-oss-20b",
@@ -209,6 +225,17 @@ Now answer the user's question.
           content: result,
         });
       }
+      // wikipedia
+      else if (functionName === "WikipediaSearch") {
+  const args = JSON.parse(functionArguments);
+  const result = await WikipediaSearch(args);
+  messages.push({
+    tool_call_id: tool.id,
+    role: "tool",
+    name: functionName,
+    content: result,
+  });
+}
     }
   }
 }
@@ -237,14 +264,9 @@ async function YouTubeSearch({ query }) {
   try {
     const response = await fetch(url);
     const data = await response.json();
-    console.log(data);
-    
-console.log(data.items);
-
     if (!data.items || data.items.length === 0) {
       return "No YouTube videos found for that query.";
     }
-
     // Format the results nicely
     let results = `Here are the top 5 YouTube videos for "${query}":\n\n`;
     data.items.forEach((item, index) => {
@@ -257,5 +279,18 @@ console.log(data.items);
   } catch (error) {
     console.error("YouTube API error:", error);
     return "Sorry, I couldn't fetch YouTube videos at the moment.";
+  }
+}
+
+
+async function WikipediaSearch({query}) {
+  try{
+    const page = await wiki.page(query)
+    console.log(page);
+    const summary = await page.summary();
+    console.log(summary);
+    return `**${summary.title}**\n\n${summary.extract}`;
+  }catch (error) {
+    return `Sorry, I couldn't find anything on Wikipedia for "${query}".`;
   }
 }
