@@ -79,7 +79,7 @@ export default function Sidebar({refershKey,triggerRefresh}) {
             onClick={() => goToChat(chat.threadId)}
             className="p-3 rounded-lg cursor-pointer mb-2 transition-colors bg-neutral-700 text-white hover:bg-neutral-600 flex"
           >
-            <div className="w-24">
+            <div className="w-80">
                {stripMarkdown(chat.messages[0]?.content)?.slice(0, 30) || "New chat"}
             </div>
                 <Ellipsis/>
