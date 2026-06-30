@@ -2,12 +2,13 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
-import { Menu, X, Ellipsis } from "lucide-react"; // install lucide-react if not already
+import { Menu, X, Ellipsis,Trash2  } from "lucide-react"; // install lucide-react if not already
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 export default function Sidebar({refershKey,triggerRefresh}) {
   const [chats, setChats] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [deletebtn,setdeletebtn] = useState(false)
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -82,7 +83,14 @@ export default function Sidebar({refershKey,triggerRefresh}) {
             <div className="w-80">
                {stripMarkdown(chat.messages[0]?.content)?.slice(0, 30) || "New chat"}
             </div>
-                <Ellipsis/>
+                <Ellipsis onClick={()=>setdeletebtn(true)}/>
+                  {deletebtn && (
+                    <>
+                    <div className="w-10">
+                      <Trash2 color="red"/>
+                    </div>
+                    </>
+                  )}
           </div>
         ))}
       </div>
