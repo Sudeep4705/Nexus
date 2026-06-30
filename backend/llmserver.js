@@ -50,6 +50,8 @@ SYSTEM OVERRIDE: You are a helpful assistant with access to tools and a knowledg
 5. **If the user asks a math question** → use the Calculator tool.
 6. **If none of the above** → use your general knowledge.
 7. **If the user asks for jobs, remote work, or companies hiring** → use the RemoteJobs tool.
+8. **If the user asks for a random decision, dice roll, or coin flip** → use the RollDice tool.
+
 
 ## TOOL RULES
 - **YouTubeSearch** – For ANY question that asks for videos, tutorials, or content on YouTube. Return actual video links.
@@ -210,6 +212,25 @@ Now answer the user's question.
             },
           },
         },
+        // game dice roll
+        {
+  type: "function",
+  function: {
+    name: "RollDice",
+    description: "Roll a dice (1–6) or flip a coin (Heads/Tails) for random decisions or games.",
+    parameters: {
+      type: "object",
+      properties: {
+        type: {
+          type: "string",
+          enum: ["dice", "coin"],
+          description: "Choose 'dice' or 'coin'"
+        }
+      },
+      required: ["type"]
+    }
+  }
+}
       ],
       tool_choice: "auto",
       model: "openai/gpt-oss-20b",
@@ -277,6 +298,21 @@ Now answer the user's question.
           content: result,
         });
       }
+      else if (functionName === "RollDice") {
+  const args = JSON.parse(functionArguments);
+  let result;
+  if (args.type === "coin") {
+    result = Math.random() > 0.5 ? "Heads" : "Tails";
+  } else { // dice
+    result = Math.floor(Math.random() * 6) + 1;
+  }
+  messages.push({
+    tool_call_id: tool.id,
+    role: "tool",
+    name: functionName,
+    content: `🎲 Result: ${result}`
+  });
+}
     }
   }
 }
@@ -298,7 +334,7 @@ async function calculate(expression) {
 }
 
 async function YouTubeSearch({ query }) {
-  console.log("🔍 Searching YouTube for:", query);
+  console.log(" Searching YouTube for:", query);
   const API_KEY = process.env.YOUTUBE_API_KEY;
   const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(query)}&key=${API_KEY}&type=video&order=relevance&videoDuration=long`;
 
@@ -343,11 +379,9 @@ async function RemoteJobs({ query, country }) {
     const url = `https://remotive.com/api/remote-jobs?search=${encodeURIComponent(query)}&limit=5`;
     const res = await fetch(url);
     const data = await res.json();
-
     if (!data.jobs || data.jobs.length === 0) {
       return `No remote jobs found for "${query}".`;
     }
-
     let result = `Here are some remote jobs for "${query}":\n\n`;
     data.jobs.slice(0, 5).forEach((job, i) => {
       result += `${i + 1}. **${job.title}**\n`;
