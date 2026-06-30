@@ -239,6 +239,7 @@ async function YouTubeSearch({ query }) {
     const data = await response.json();
     console.log(data);
     
+console.log(data.items);
 
     if (!data.items || data.items.length === 0) {
       return "No YouTube videos found for that query.";
