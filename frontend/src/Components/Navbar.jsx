@@ -11,9 +11,10 @@ export default function Navbar(){
         const handlelogout = async()=>{
             try{
                 let res = await axios.get("https://nexus-foq8.onrender.com/auth/logout",{withCredentials:true})
+                Navigate("/login")
                 toast.success(res.data.message)
                 setUser(null)
-                Navigate("/login")
+                
             }
             catch(error){
                 console.log(error);
