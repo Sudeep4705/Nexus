@@ -5,6 +5,7 @@ import { indexFile } from "../embeddFiledata.js";
 import { PrismaClient } from "@prisma/client";
 import { generateMain } from "../llmserver.js";
 import {validate} from "../middlewares/verifyLogin.js"
+import { asyncWrapper } from "../middlewares/asyncWrapper.js";
 const router =  express.Router()
 const storage = multer.memoryStorage();
 const prisma = new PrismaClient();
@@ -27,15 +28,14 @@ const uploads = multer({
   limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB limit
 });
 
-router.post("/add",validate,async (req, res) => {
+router.post("/add",validate,asyncWrapper(async (req, res) => {
   const msg = req.body.content;
   const threadId = req.body.threadId;
   if (!msg) {
     return res.status(400).json({ message: "All fields required" });
   }
-  try {
     let chat = await prisma.chat.findUnique({
-      where: {
+      where:{
         threadId,
       },
     });
@@ -65,16 +65,10 @@ router.post("/add",validate,async (req, res) => {
       },
     });
     res.status(200).json({ message: assistantReply });
-  } catch (error) {
-    console.error("Error in /data:", error);
-    res
-      .status(500)
-      .json({ message: "Sorry, something went wrong on the server." });
-  }
-})
+}))
 
-router.post("/fileupload",validate,uploads.single("file"), async (req, res) => {
-  try {
+router.post("/fileupload",validate,uploads.single("file"),asyncWrapper(async (req, res) => {
+
     if (!req.file) {
       return res.status(400).json({ error: "'No file uploaded'" });
     }
@@ -84,18 +78,11 @@ router.post("/fileupload",validate,uploads.single("file"), async (req, res) => {
       success: true,
       message: `File "${originalname}" indexed successfully.`,
     });
-  } catch (error) {
-    console.error("Upload error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to process the file: " + error.message,
-    });
-  }
-})
+  
+}))
 
-router.get("/:threadId",validate, async (req, res) => {
+router.get("/:threadId",validate, asyncWrapper(async (req, res) => {
   const { threadId } = req.params;
-  try {
     let chathistory = await prisma.chat.findUnique({
       where: {
         threadId,
@@ -116,13 +103,10 @@ router.get("/:threadId",validate, async (req, res) => {
       content: m.content,
     }));
     res.json({ messages });
-  } catch (error) {
-    res.status(500).json({ error });
-  }
-})
+  
+}))
 
-router.get("/",validate,async(req,res)=>{
-  try{
+router.get("/",validate,asyncWrapper(async(req,res)=>{
     const chats = await prisma.chat.findMany({
       where:{
         userId:req.user.id
@@ -140,25 +124,15 @@ router.get("/",validate,async(req,res)=>{
       },
     })
     res.json({chats})
-  }
-  catch(error){
-    console.error("Error fetching chats:", error);
-      res.status(500).json({ error: "Internal server error" });
-  }
-})
+}))
 
-router.delete("/:threadId", validate, async (req, res) => {
+router.delete("/:threadId", validate,asyncWrapper(async (req, res) => {
   const { threadId } = req.params;
-  try {
     const chat = await prisma.chat.findUnique({ where: { threadId } });
     if (!chat) return res.status(404).json({ error: "Chat not found" });
     if (chat.userId !== req.user.id) return res.status(403).json({ error: "Unauthorized" });
     await prisma.chat.delete({ where: { threadId } });
     res.json({ message: "Chat deleted" });
-  } catch (error) {
-    console.error("Delete error:", error);
-    res.status(500).json({ error: "Failed to delete chat" });
-  }
-});
+}));
 
 export default router

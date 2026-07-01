@@ -5,14 +5,14 @@ import bcrypt from "bcrypt";
 import { PrismaClient } from "@prisma/client";
 import { userSchema } from "../Validators/auth.validator.js";
 import {validate} from "../middlewares/verifyLogin.js"
+import { asyncWrapper } from "../middlewares/asyncWrapper.js";
 const prisma = new PrismaClient();
 
-router.post("/signup", async (req, res) => {
+router.post("/signup", asyncWrapper(async (req, res) => {
   const { error, value } = userSchema.validate(req.body);
   if (error) {
     return res.status(400).json({ error: error.details[0].message });
   }
-  try {
     const { email, password, name } = value;
     if (!email || !password) {
       return res.status(400).json({ message: "All fields are required" });
@@ -40,17 +40,14 @@ router.post("/signup", async (req, res) => {
       name:data.name
     }
     res.status(201).json({ message: "Registerd successfully",user:safeuser });
-  } catch (error) {
-    console.log(error);
-  }
-});
+  
+}));
 
-router.post("/login", async (req, res) => {
+router.post("/login",asyncWrapper(async (req, res) => {
   const { error, value } = userSchema.validate(req.body);
   if (error) {
     return res.status(400).json({ error: error.details[0].message });
   }
-  try {
     const { email, password } = value;
     const emailcheck = await prisma.user.findUnique({
       where: {
@@ -58,16 +55,15 @@ router.post("/login", async (req, res) => {
       },
     });
     if (!emailcheck) {
-      return res.status(400).json({ message: "email is not found" });
+      return res.status(400).json({ message: "Invalid email or password" });
     }
     const hashed = await bcrypt.compare(password, emailcheck.password);
     if (!hashed) {
-      return res.status(401).json({ message: "Password is wrong" });
+      return res.status(401).json({ message: "Invalid email or password" });
     }
     const token = jwt.sign({ id: emailcheck.id }, process.env.SECRET, {
       expiresIn: "1d",
     });
-
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV == "production",
@@ -78,15 +74,11 @@ router.post("/login", async (req, res) => {
       email:emailcheck.email,
       name:emailcheck.name
     }
-
     res.status(200).json({ message: "Login Successfully",user:safeuser });
-  } catch (error) {
-    res.status(400).json({ message: "internal Error" });
-  }
-});
+}));
 
 
-router.get("/logout",async(req,res)=>{
+router.get("/logout",asyncWrapper(async(req,res)=>{
     const token = req.cookies.token
   if (!token)
     return res.status(400).json({ message: "No token" })
@@ -97,11 +89,11 @@ router.get("/logout",async(req,res)=>{
     sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
   })
    res.status(200).json({ message: "Logged out successfully" });
-})
+}))
 
-router.get("/verify",validate,async(req,res)=>{
+router.get("/verify",validate,asyncWrapper(async(req,res)=>{
     res.json({user:req.user})
-})
+}))
 
 
 export default router;
