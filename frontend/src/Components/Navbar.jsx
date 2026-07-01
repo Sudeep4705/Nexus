@@ -1,17 +1,17 @@
 import axios from "axios";
 import React, { useContext, useEffect, useState } from "react";
-import { Link, Navigate, useLocation } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { AuthContext } from "../Context/AuthContext";
 
 export default function Navbar(){
   const location = useLocation();
   const {User,setUser} = useContext(AuthContext)
-       
+       const navigate = useNavigate()
         const handlelogout = async()=>{
             try{
                 let res = await axios.get("https://nexus-foq8.onrender.com/auth/logout",{withCredentials:true})
-                Navigate("/login")
+                navigate("/login")
                 toast.success(res.data.message)
                 setUser(null)
                 
