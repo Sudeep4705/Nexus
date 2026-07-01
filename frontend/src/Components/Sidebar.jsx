@@ -6,7 +6,7 @@ import { Menu, X, Ellipsis,Trash2  } from "lucide-react"; // install lucide-reac
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { toast } from "react-toastify";
-export default function Sidebar({refershKey,triggerRefresh}) {
+export default function Sidebar({refershKey,triggerRefresh,currentThreadId={threadId}}) {
   const [chats, setChats] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [menuOpenFor, setMenuOpenFor] = useState(null);
@@ -56,6 +56,9 @@ const handlechatdelete = async(threadId)=>{
       });
       toast.success(res.data.message)
       if (triggerRefresh) triggerRefresh();
+      if (threadId === currentThreadId) {
+        navigate('/chat/new', { replace: true });
+      }
     } catch (error) {
       toast.error(error.response.data.message)
       console.error("Delete failed", error);

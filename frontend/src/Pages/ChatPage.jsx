@@ -13,7 +13,7 @@ export default function ChatPage() {
     const triggerRefresh = ()=>setrefreshkey(prev=>prev+1)
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar refershKey={refershkey} triggerRefresh={triggerRefresh}/>
+      <Sidebar refershKey={refershkey} triggerRefresh={triggerRefresh} currentThreadId={threadId}/>
       <div className="flex-1 overflow-hidden">
         <Hero threadId={threadId} triggerRefresh={triggerRefresh} />   
       </div>
