@@ -13,7 +13,7 @@ export default function Navbar(){
                 let res = await axios.get("https://nexus-foq8.onrender.com/auth/logout",{withCredentials:true})
                 toast.success(res.data.message)
                 setUser(null)
-                Navigate("/")
+                Navigate("/login")
             }
             catch(error){
                 console.log(error);
