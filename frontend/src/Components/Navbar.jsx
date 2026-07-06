@@ -14,7 +14,6 @@ export default function Navbar(){
                 navigate("/login")
                 toast.success(res.data.message)
                 setUser(null)
-                
             }
             catch(error){
                 console.log(error);

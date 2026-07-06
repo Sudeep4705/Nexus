@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
     };
     cheklogin();
   }, []);
-
+  
   return (
     <AuthContext.Provider value={{ User, setUser,Loading }}>
       {children}

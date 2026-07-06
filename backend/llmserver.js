@@ -376,24 +376,26 @@ async function WikipediaSearch({ query }) {
 }
 
 async function RemoteJobs({ query, country }) {
-  try {
-    // Use Remotive's public API (no key needed, returns JSON)
-    const url = `https://remotive.com/api/remote-jobs?search=${encodeURIComponent(query)}&limit=5`;
-    const res = await fetch(url);
-    const data = await res.json();
+ try {
+    // Fallback: use the Himalayas API (no key)
+    const url = `https://himalayas.app/api/jobs?search=${encodeURIComponent(query)}&limit=5`;
+    const response = await fetch(url);
+    const data = await response.json();
+
     if (!data.jobs || data.jobs.length === 0) {
       return `No remote jobs found for "${query}".`;
     }
+
     let result = `Here are some remote jobs for "${query}":\n\n`;
     data.jobs.slice(0, 5).forEach((job, i) => {
       result += `${i + 1}. **${job.title}**\n`;
-      result += `   Company: ${job.company_name}\n`;
+      result += `   Company: ${job.company}\n`;
       if (job.salary) result += `   Salary: ${job.salary}\n`;
       result += `   Apply: ${job.url}\n\n`;
     });
     return result;
   } catch (error) {
     console.error("RemoteJobs error:", error);
-    return "Sorry, I could not fetch job listings.";
+    return "Sorry, I couldn't fetch job listings at the moment.";
   }
 }
