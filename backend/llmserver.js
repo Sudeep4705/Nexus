@@ -385,14 +385,14 @@ async function RemoteJobs({ query, country }) {
     if (!data.jobs || data.jobs.length === 0) {
       return `No remote jobs found for "${query}".`;
     }
-
-    let result = `Here are some remote jobs for "${query}":\n\n`;
-    data.jobs.slice(0, 5).forEach((job, i) => {
-      result += `${i + 1}. **${job.title}**\n`;
-      result += `   Company: ${job.company}\n`;
-      if (job.salary) result += `   Salary: ${job.salary}\n`;
-      result += `   Apply: ${job.url}\n\n`;
-    });
+let result = `Here are some remote jobs for "${query}":\n\n`;
+data.jobs.slice(0, 5).forEach((job, i) => {
+  const applyLink = job.url || job.link || job.company_url || "#";
+  result += `${i + 1}. **${job.title}**\n`;
+  result += `   Company: ${job.company_name}\n`;
+  if (job.salary) result += `   Salary: ${job.salary}\n`;
+  result += `   Apply: ${applyLink} (you'll be redirected to the application page)\n\n`;
+});
     return result;
   } catch (error) {
     console.error("RemoteJobs error:", error);
