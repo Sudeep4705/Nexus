@@ -313,7 +313,7 @@ Now answer the user's question.
           tool_call_id: tool.id,
           role: "tool",
           name: functionName,
-          content: `🎲 Result: ${result}`,
+          content: ` Result: ${result}`,
         });
       }
     }
@@ -375,27 +375,38 @@ async function WikipediaSearch({ query }) {
   }
 }
 
-async function RemoteJobs({ query, country }) {
- try {
-    // Fallback: use the Himalayas API (no key)
-    const url = `https://himalayas.app/api/jobs?search=${encodeURIComponent(query)}&limit=5`;
+async function RemoteJobs({ query }) {
+  try {
+    // Try a free, reliable job API (no key required)
+    const url = `https://jobicy.com/api/v2/remote-jobs?query=${encodeURIComponent(query)}&count=5`;
     const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`API returned ${response.status}`);
+    }
+    
     const data = await response.json();
+    const jobs = data.jobs || [];
 
-    if (!data.jobs || data.jobs.length === 0) {
+    if (jobs.length === 0) {
       return `No remote jobs found for "${query}".`;
     }
-let result = `Here are some remote jobs for "${query}":\n\n`;
-data.jobs.slice(0, 5).forEach((job, i) => {
-  const applyLink = job.url || job.link || job.company_url || "#";
-  result += `${i + 1}. **${job.title}**\n`;
-  result += `   Company: ${job.company_name}\n`;
-  if (job.salary) result += `   Salary: ${job.salary}\n`;
-  result += `   Apply: ${applyLink} (you'll be redirected to the application page)\n\n`;
-});
+
+    let result = `Here are some remote jobs for "${query}":\n\n`;
+    jobs.slice(0, 5).forEach((job, i) => {
+      const title = job.jobTitle || job.title || "Unknown title";
+      const company = job.company || job.companyName || "Unknown company";
+      const salary = job.salary || job.salaryRange || "Not specified";
+      const applyLink = job.url || job.jobUrl || job.link || "#";
+      
+      result += `${i + 1}. **${title}**\n`;
+      result += `   Company: ${company}\n`;
+      result += `   Salary: ${salary}\n`;
+      result += `   Apply: ${applyLink}\n\n`;
+    });
     return result;
   } catch (error) {
     console.error("RemoteJobs error:", error);
-    return "Sorry, I couldn't fetch job listings at the moment.";
+    return "Sorry, I couldn't fetch job listings at the moment. Please try again later.";
   }
 }
