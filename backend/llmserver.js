@@ -49,8 +49,7 @@ SYSTEM OVERRIDE: You are a helpful assistant with access to tools and a knowledg
 4. **If the user asks for real‑time or up‑to‑date information** (news, weather, current events, people, facts) → use the WebSearch tool.
 5. **If the user asks a math question** → use the Calculator tool.
 6. **If none of the above** → use your general knowledge.
-7. **If the user asks for jobs, remote work, or companies hiring** → use the RemoteJobs tool.
-8. **If the user asks for a random decision, dice roll, or coin flip** → use the RollDice tool.
+7. **If the user asks for a random decision, dice roll, or coin flip** → use the RollDice tool.
 
 
 ## TOOL RULES
@@ -182,30 +181,6 @@ Now answer the user's question.
                 query: {
                   type: "string",
                   description: "The topic to search for on Wikipedia",
-                },
-              },
-              required: ["query"],
-            },
-          },
-        },
-        // remote job
-        {
-          type: "function",
-          function: {
-            name: "RemoteJobs",
-            description:
-              "Search for remote jobs worldwide. Use this for job search, remote work, or finding companies hiring.",
-            parameters: {
-              type: "object",
-              properties: {
-                query: {
-                  type: "string",
-                  description:
-                    "Job role or keyword e.g., 'React Developer', 'Data Analyst'",
-                },
-                country: {
-                  type: "string",
-                  description: "Country code e.g., 'IN', 'US', 'GB' (optional)",
                 },
               },
               required: ["query"],
@@ -375,38 +350,3 @@ async function WikipediaSearch({ query }) {
   }
 }
 
-async function RemoteJobs({ query }) {
-  try {
-    // Try a free, reliable job API (no key required)
-    const url = `https://jobicy.com/api/v2/remote-jobs?query=${encodeURIComponent(query)}&count=5`;
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      throw new Error(`API returned ${response.status}`);
-    }
-    
-    const data = await response.json();
-    const jobs = data.jobs || [];
-
-    if (jobs.length === 0) {
-      return `No remote jobs found for "${query}".`;
-    }
-
-    let result = `Here are some remote jobs for "${query}":\n\n`;
-    jobs.slice(0, 5).forEach((job, i) => {
-      const title = job.jobTitle || job.title || "Unknown title";
-      const company = job.company || job.companyName || "Unknown company";
-      const salary = job.salary || job.salaryRange || "Not specified";
-      const applyLink = job.url || job.jobUrl || job.link || "#";
-      
-      result += `${i + 1}. **${title}**\n`;
-      result += `   Company: ${company}\n`;
-      result += `   Salary: ${salary}\n`;
-      result += `   Apply: ${applyLink}\n\n`;
-    });
-    return result;
-  } catch (error) {
-    console.error("RemoteJobs error:", error);
-    return "Sorry, I couldn't fetch job listings at the moment. Please try again later.";
-  }
-}
