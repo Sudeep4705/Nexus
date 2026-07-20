@@ -68,7 +68,6 @@ router.post("/add",validate,asyncWrapper(async (req, res) => {
 }))
 
 router.post("/fileupload",validate,uploads.single("file"),asyncWrapper(async (req, res) => {
-
     if (!req.file) {
       return res.status(400).json({ error: "'No file uploaded'" });
     }
@@ -78,7 +77,6 @@ router.post("/fileupload",validate,uploads.single("file"),asyncWrapper(async (re
       success: true,
       message: `File "${originalname}" indexed successfully.`,
     });
-  
 }))
 
 router.get("/:threadId",validate, asyncWrapper(async (req, res) => {
@@ -103,8 +101,8 @@ router.get("/:threadId",validate, asyncWrapper(async (req, res) => {
       content: m.content,
     }));
     res.json({ messages });
-  
 }))
+
 
 router.get("/",validate,asyncWrapper(async(req,res)=>{
     const chats = await prisma.chat.findMany({
@@ -126,6 +124,7 @@ router.get("/",validate,asyncWrapper(async(req,res)=>{
     res.json({chats})
 }))
 
+
 router.delete("/:threadId", validate,asyncWrapper(async (req, res) => {
   const { threadId } = req.params;
     const chat = await prisma.chat.findUnique({ where: { threadId } });
@@ -134,5 +133,4 @@ router.delete("/:threadId", validate,asyncWrapper(async (req, res) => {
     await prisma.chat.delete({ where: { threadId } });
     res.json({ message: "Chat deleted" });
 }));
-
 export default router

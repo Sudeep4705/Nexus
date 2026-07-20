@@ -219,7 +219,7 @@ Now answer the user's question.
     const toolcalls = completions.choices[0].message.tool_calls;
     //   console.log(toolcalls);
 
-    if (!toolcalls) {
+    if (!toolcalls){
       return `${completions.choices[0].message.content}`;
     }
 
@@ -301,11 +301,10 @@ async function calculate(expression) {
   }
 }
 
-async function YouTubeSearch({ query }) {
+async function YouTubeSearch({ query }){
   console.log(" Searching YouTube for:", query);
   const API_KEY = process.env.YOUTUBE_API_KEY;
   const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(query)}&key=${API_KEY}&type=video&order=relevance&videoDuration=long`;
-
   try {
     const response = await fetch(url);
     const data = await response.json();
@@ -331,9 +330,7 @@ async function WikipediaSearch({ query }) {
   console.log("searching wikipedia");
   try {
     const page = await wiki.page(query);
-    console.log(page);
     const summary = await page.summary();
-    console.log(summary);
     return `**${summary.title}**\n\n${summary.extract}`;
   } catch (error) {
     return `Sorry, I couldn't find anything on Wikipedia for "${query}".`;
