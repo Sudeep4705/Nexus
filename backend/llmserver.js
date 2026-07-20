@@ -262,18 +262,8 @@ Now answer the user's question.
           role: "tool",
           name: functionName,
           content: result,
-        });
-        // remote jobs
-      } else if (functionName === "RemoteJobs") {
-        const args = JSON.parse(functionArguments);
-        const result = await RemoteJobs(args);
-        messages.push({
-          tool_call_id: tool.id,
-          role: "tool",
-          name: functionName,
-          content: result,
-        });
-      }
+        });s
+      } 
       // roll dice
       else if (functionName === "RollDice") {
         const args = JSON.parse(functionArguments);
