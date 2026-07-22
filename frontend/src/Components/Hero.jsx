@@ -10,7 +10,6 @@ import { toast } from "react-toastify";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 export default function Hero({threadId,triggerRefresh}){
-  
   const fileinputRef = useRef(null)
   const [input, setinput] = useState("");
   const [message, setMessage] = useState([]);
@@ -52,7 +51,6 @@ useEffect(()=>{
     setisloading(true)
     setinput("")
     try {
-      console.log("im entering");
       let res = await axios.post(
         "https://nexus-foq8.onrender.com/chats/add",
         { content: input,threadId },

@@ -6,7 +6,7 @@ import { Menu, X, Ellipsis,Trash2  } from "lucide-react"; // install lucide-reac
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { toast } from "react-toastify";
-export default function Sidebar({refershKey,triggerRefresh,currentThreadId={threadId}}) {
+export default function Sidebar({refershKey,triggerRefresh,currentThreadId={threadId}}){
   const [chats, setChats] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [menuOpenFor, setMenuOpenFor] = useState(null);

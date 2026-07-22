@@ -17,7 +17,6 @@ export default function Navbar(){
             }
             catch(error){
                 console.log(error);
-                
             }
         }
   return (
@@ -58,7 +57,6 @@ export default function Navbar(){
       >
         Login
       </Link>
-    
     </div>
     )}
 
