@@ -13,11 +13,10 @@ const embeddings = new VoyageEmbeddings({
 export async function indexFile(filepath,buffer) {
   const documents = await fileToDocuments(filepath,buffer);
   console.log(`Converted ${filepath} to ${documents.length} documents`);
-
-  await QdrantVectorStore.fromDocuments(documents, embeddings, {
-   url: process.env.QDRANT_URL,        
+  await QdrantVectorStore.fromDocuments(documents, embeddings,{
+  url: process.env.QDRANT_URL,        
   apiKey: process.env.QDRANT_API_KEY,
-    collectionName: "file_collection",
+  collectionName: "file_collection",
   });
-  console.log(`Stored vectors for ${filepath}`);
+  console.log(`Stored vectors for ${filepath}`); 
 }

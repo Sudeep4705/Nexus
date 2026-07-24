@@ -27,7 +27,6 @@ export async function generateMain(userMsg, threadId) {
   if (!userMsg) {
     return "Please ask the valid question";
   }
-
   const chat = await prisma.chat.findUnique({
     where: {
       threadId,
@@ -50,6 +49,7 @@ SYSTEM OVERRIDE: You are a helpful assistant with access to tools and a knowledg
 5. **If the user asks a math question** → use the Calculator tool.
 6. **If none of the above** → use your general knowledge.
 7. **If the user asks for a random decision, dice roll, or coin flip** → use the RollDice tool.
+8. **If the user asks to generate, draw, or create an image** → use the GenerateImage tool.
 
 
 
@@ -208,6 +208,26 @@ Now answer the user's question.
             },
           },
         },
+        // image generation
+        {
+          type: "function",
+          function: {
+            name: "GenerateImage",
+            description:
+              "Generate an image based on a text prompt. Use this when the user asks to draw, create, or generate an image.",
+            parameters: {
+              type: "object",
+              properties: {
+                prompt: {
+                  type: "string",
+                  description:
+                    "The detailed description of the image to generate.",
+                },
+              },
+              required: ["prompt"],
+            },
+          },
+        },
       ],
       tool_choice: "auto",
       model: "openai/gpt-oss-20b",
@@ -220,7 +240,7 @@ Now answer the user's question.
     const toolcalls = completions.choices[0].message.tool_calls;
     //   console.log(toolcalls);
 
-    if (!toolcalls){
+    if (!toolcalls) {
       return `${completions.choices[0].message.content}`;
     }
 
@@ -263,8 +283,9 @@ Now answer the user's question.
           role: "tool",
           name: functionName,
           content: result,
-        });s
-      } 
+        });
+        s;
+      }
       // roll dice
       else if (functionName === "RollDice") {
         const args = JSON.parse(functionArguments);
@@ -282,6 +303,16 @@ Now answer the user's question.
           content: ` Result: ${result}`,
         });
       }
+      else if (functionName === "GenerateImage") {
+  const args = JSON.parse(functionArguments);
+  const result = await GenerateImage(args);
+  messages.push({
+    tool_call_id: tool.id,
+    role: "tool",
+    name: functionName,
+    content: result, // This contains the markdown image string
+  });
+}
     }
   }
 }
@@ -302,7 +333,7 @@ async function calculate(expression) {
   }
 }
 
-async function YouTubeSearch({ query }){
+async function YouTubeSearch({ query }) {
   console.log(" Searching YouTube for:", query);
   const API_KEY = process.env.YOUTUBE_API_KEY;
   const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(query)}&key=${API_KEY}&type=video&order=relevance&videoDuration=long`;
@@ -338,3 +369,18 @@ async function WikipediaSearch({ query }) {
   }
 }
 
+
+async function GenerateImage({ prompt }) {
+  try {
+    // Encode the prompt for the URL
+    const encodedPrompt = encodeURIComponent(prompt);
+    // Optional: Add width/height parameters for better control
+    const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true`;
+    
+    // Return as Markdown image so ReactMarkdown renders it
+    return `![Generated Image](${url})`;
+  } catch (error) {
+    console.error("Image generation error:", error);
+    return "Sorry, I couldn't generate the image at the moment.";
+  }
+}
