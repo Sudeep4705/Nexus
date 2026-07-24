@@ -370,10 +370,10 @@ async function WikipediaSearch({ query }) {
 }
 
 
-async function GenerateImage({ prompt }) {
+async function GenerateImage({ query }) {
   try {
     // Encode the prompt for the URL
-    const encodedPrompt = encodeURIComponent(prompt);
+    const encodedPrompt = encodeURIComponent(query);
     // Optional: Add width/height parameters for better control
     const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true`;
     
