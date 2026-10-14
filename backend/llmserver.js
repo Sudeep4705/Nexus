@@ -310,7 +310,7 @@ Now answer the user's question.
     tool_call_id: tool.id,
     role: "tool",
     name: functionName,
-    content: result, // This contains the markdown image string
+    content: result, 
   });
 }
     }
@@ -370,17 +370,51 @@ async function WikipediaSearch({ query }) {
 }
 
 
-async function GenerateImage({ query }) {
+
+async function GenerateImage({ prompt }) {
   try {
-    // Encode the prompt for the URL
-    const encodedPrompt = encodeURIComponent(query);
-    // Optional: Add width/height parameters for better control
-    const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true`;
-    
-    // Return as Markdown image so ReactMarkdown renders it
-    return `![Generated Image](${url})`;
+    if (!prompt || typeof prompt !== "string" || !prompt.trim()) {
+      return "Please provide a description of the image you want to generate.";
+    }
+
+    const userPrompt = prompt.trim();
+
+    const encodedPrompt = encodeURIComponent(
+      `Create an image based on this exact user request: ${userPrompt}.
+       The requested subject must be the main focus of the image.
+       Follow the requested objects, people, environment, style,
+       colors, composition, and other details.
+       Do not replace the requested subject with an unrelated one.
+       Do not add unrelated people, objects, or scenes.
+       If the request specifies a particular object, place, animal,
+       person, flag, or design, depict that subject accurately.`
+    );
+
+    const imageUrl =
+      `https://image.pollinations.ai/prompt/${encodedPrompt}` +
+      `?width=1024&height=1024&nologo=true`;
+
+    // Check whether the image endpoint responds successfully.
+    const response = await fetch(imageUrl, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      console.error(
+        "Image API error:",
+        response.status,
+        response.statusText
+      );
+
+      return "Image generation failed. Please try again.";
+    }
+
+    // Return the image URL as Markdown for ReactMarkdown.
+    return `![AI Generated Image](${imageUrl})`;
+
   } catch (error) {
     console.error("Image generation error:", error);
-    return "Sorry, I couldn't generate the image at the moment.";
+    return "Sorry, I couldn't generate the image right now.";
   }
 }
+
