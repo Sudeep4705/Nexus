@@ -264,7 +264,7 @@ Now answer the user's question.
           name: functionName,
           content: result,
         });
-        s;
+      
       }
       // roll dice
       else if (functionName === "RollDice") {
