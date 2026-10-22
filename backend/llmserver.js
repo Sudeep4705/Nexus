@@ -49,7 +49,7 @@ SYSTEM OVERRIDE: You are a helpful assistant with access to tools and a knowledg
 5. **If the user asks a math question** → use the Calculator tool.
 6. **If none of the above** → use your general knowledge.
 7. **If the user asks for a random decision, dice roll, or coin flip** → use the RollDice tool.
-8. **If the user asks to generate, draw, or create an image** → use the GenerateImage tool.
+
 
 
 
@@ -207,27 +207,7 @@ Now answer the user's question.
               required: ["type"],
             },
           },
-        },
-        // image generation
-        {
-          type: "function",
-          function: {
-            name: "GenerateImage",
-            description:
-              "Generate an image based on a text prompt. Use this when the user asks to draw, create, or generate an image.",
-            parameters: {
-              type: "object",
-              properties: {
-                prompt: {
-                  type: "string",
-                  description:
-                    "The detailed description of the image to generate.",
-                },
-              },
-              required: ["prompt"],
-            },
-          },
-        },
+        }
       ],
       tool_choice: "auto",
       model: "openai/gpt-oss-20b",
@@ -303,16 +283,6 @@ Now answer the user's question.
           content: ` Result: ${result}`,
         });
       }
-      else if (functionName === "GenerateImage") {
-  const args = JSON.parse(functionArguments);
-  const result = await GenerateImage(args);
-  messages.push({
-    tool_call_id: tool.id,
-    role: "tool",
-    name: functionName,
-    content: result, 
-  });
-}
     }
   }
 }
@@ -371,50 +341,5 @@ async function WikipediaSearch({ query }) {
 
 
 
-async function GenerateImage({ prompt }) {
-  try {
-    if (!prompt || typeof prompt !== "string" || !prompt.trim()) {
-      return "Please provide a description of the image you want to generate.";
-    }
 
-    const userPrompt = prompt.trim();
-
-    const encodedPrompt = encodeURIComponent(
-      `Create an image based on this exact user request: ${userPrompt}.
-       The requested subject must be the main focus of the image.
-       Follow the requested objects, people, environment, style,
-       colors, composition, and other details.
-       Do not replace the requested subject with an unrelated one.
-       Do not add unrelated people, objects, or scenes.
-       If the request specifies a particular object, place, animal,
-       person, flag, or design, depict that subject accurately.`
-    );
-
-    const imageUrl =
-      `https://image.pollinations.ai/prompt/${encodedPrompt}` +
-      `?width=1024&height=1024&nologo=true`;
-
-    // Check whether the image endpoint responds successfully.
-    const response = await fetch(imageUrl, {
-      method: "GET",
-    });
-
-    if (!response.ok) {
-      console.error(
-        "Image API error:",
-        response.status,
-        response.statusText
-      );
-
-      return "Image generation failed. Please try again.";
-    }
-
-    // Return the image URL as Markdown for ReactMarkdown.
-    return `![AI Generated Image](${imageUrl})`;
-
-  } catch (error) {
-    console.error("Image generation error:", error);
-    return "Sorry, I couldn't generate the image right now.";
-  }
-}
 

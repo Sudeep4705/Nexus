@@ -12,7 +12,7 @@ const prisma = new PrismaClient();
 
 
 //this function for accept pdf and excel only
-const fileFilter = (req, file, cb) => {
+const fileFilter = (file, cb) => {
   const allowedExtensions = [".pdf", ".xlsx", ".xls"];
   const ext = path.extname(file.originalname).toLowerCase();
   if (allowedExtensions.includes(ext)) {
@@ -73,7 +73,7 @@ router.post("/fileupload",validate,uploads.single("file"),asyncWrapper(async (re
     }
     const { originalname, buffer } = req.file;
     await indexFile(originalname, buffer);
-    res.status(200).json({
+    res.status(200).json({  
       success: true,
       message: `File "${originalname}" indexed successfully.`,
     });
