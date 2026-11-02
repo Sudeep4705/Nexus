@@ -20,7 +20,12 @@ export default function Signup() {
 
   const submitForm = async (data) => {
     try {
-      const res = await axios.post("https://nexus-foq8.onrender.com/auth/signup", data, {
+      const cleanData = {
+         email: data.email.trim().toLowerCase(), 
+      password: data.password.trim(),
+      name: data.name ? data.name.trim() : undefined 
+      }
+      const res = await axios.post("https://nexus-foq8.onrender.com/auth/signup", cleanData, {
         withCredentials: true,
       });
       setUser(res.data.user)
