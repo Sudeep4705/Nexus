@@ -12,7 +12,7 @@ const prisma = new PrismaClient();
 
 
 //this function for accept pdf and excel only
-const fileFilter = (file, cb) => {
+const fileFilter = (req,file, cb) => {
   const allowedExtensions = [".pdf", ".xlsx", ".xls"];
   const ext = path.extname(file.originalname).toLowerCase();
   if (allowedExtensions.includes(ext)) {
