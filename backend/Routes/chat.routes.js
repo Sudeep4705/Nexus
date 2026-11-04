@@ -25,7 +25,7 @@ const fileFilter = (req,file, cb) => {
 const uploads = multer({
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize:1024}, // 50 MB limit
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB limit
 });
 
 router.post("/add",validate,asyncWrapper(async (req, res) => {
@@ -71,7 +71,6 @@ router.post("/fileupload",validate,uploads.single("file"),asyncWrapper(async (re
     if (!req.file) {
       return res.status(400).json({ error: "'No file uploaded'" });
     }
-        console.log("🔍 MULTER OUTPUT:", req.file); 
     const { originalname, buffer } = req.file;
     await indexFile(originalname, buffer);
     res.status(200).json({  
