@@ -18,6 +18,23 @@ app.use(cookieParser())
 app.use("/chats",chatRouter);
 app.use("/auth",authRouter)
 
+// gloabal error handler
+app.use((err, req, res, next) => {
+  console.error("Global Error Handler caught:", err);
+
+  // 1. Catch Multer file size errors specifically
+  if (err.code === "LIMIT_FILE_SIZE") {
+    return res.status(413).json({ message: "File is too large. Maximum size is 50MB." });
+  }
+
+  // 2. Catch any other errors (like database errors, etc.)
+  const statusCode = err.status || 500;
+  const message = err.message || "Internal Server Error";
+
+  // 3. Send a clean JSON response back to the frontend
+  res.status(statusCode).json({ message });
+});
+
 app.listen(8333, () => {
   console.log("SERVER IS LISTENING ON THE PORT 8333");
 });
