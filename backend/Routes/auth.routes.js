@@ -40,7 +40,6 @@
         name:data.name
       }
       res.status(201).json({ message: "Registerd successfully",user:safeuser });
-    
   }));
 
   router.post("/login",asyncWrapper(async (req, res) => {

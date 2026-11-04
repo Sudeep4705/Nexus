@@ -21,7 +21,7 @@ export default function Signup() {
   const submitForm = async (data) => {
     try {
       const cleanData = {
-         email: data.email.trim().toLowerCase(), 
+      email: data.email.trim().toLowerCase(), 
       password: data.password.trim(),
       name: data.name ? data.name.trim() : undefined 
       }

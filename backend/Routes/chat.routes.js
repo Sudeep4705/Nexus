@@ -25,7 +25,7 @@ const fileFilter = (file, cb) => {
 const uploads = multer({
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB limit
+  limits: { fileSize:1024}, // 50 MB limit
 });
 
 router.post("/add",validate,asyncWrapper(async (req, res) => {
