@@ -71,6 +71,7 @@ router.post("/fileupload",validate,uploads.single("file"),asyncWrapper(async (re
     if (!req.file) {
       return res.status(400).json({ error: "'No file uploaded'" });
     }
+        console.log("🔍 MULTER OUTPUT:", req.file); 
     const { originalname, buffer } = req.file;
     await indexFile(originalname, buffer);
     res.status(200).json({  
