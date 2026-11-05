@@ -44,7 +44,7 @@ app.use((err, req, res, next) => {
 async function setupDatabase() {
   try {
     await qdrantClient.createPayloadIndex("file_collection", {
-      field_name: "threadId",
+      field_name: "metadata.threadId",
       field_schema: "keyword",
     });
     console.log("Qdrant index for threadId is ready!");
