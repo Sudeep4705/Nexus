@@ -160,7 +160,7 @@ router.delete(
       filter: {
         must: [
           {
-            key: "metadata.threadId",
+            key: "threadId",
             match: { value: threadId },
           },
         ],
