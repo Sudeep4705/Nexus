@@ -80,15 +80,12 @@ useEffect(()=>{
   const fileupload = async(e)=>{
     const file = e.target.files[0]
     if(!file)return
-
     const formdata = new FormData();
     formdata.append("file",file)
+    formdata.append("threadId",threadId)
     try{
    setisloading(true)
-    let res = await axios.post("https://nexus-foq8.onrender.com/chats/fileupload",formdata,{headers:{
-      'Content-Type':'multipart/form-data'
-    },withCredentials:true})
-  
+    let res = await axios.post("https://nexus-foq8.onrender.com/chats/fileupload",formdata,{withCredentials:true})
     console.log('Upload success:', res.data);
     }
     catch(error){
@@ -97,6 +94,7 @@ useEffect(()=>{
       setisloading(false)
     }
   }
+
   const handleFileIconClick = ()=>{
     fileinputRef.current.click()
   }

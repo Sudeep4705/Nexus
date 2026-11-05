@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import { Menu, X, Ellipsis,Trash2  } from "lucide-react"; // install lucide-react if not already
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { toast } from "react-toastify";
 export default function Sidebar({refershKey,triggerRefresh,currentThreadId={threadId}}){
   const [chats, setChats] = useState([]);

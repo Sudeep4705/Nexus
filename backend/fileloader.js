@@ -4,7 +4,7 @@ import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
 
-export async function fileToDocuments(filepath,buffer) {
+export async function fileToDocuments(filepath,buffer,threadId) {
   const extension = filepath.split('.').pop().toLowerCase();
   
   // --- Excel files ---
@@ -23,6 +23,7 @@ export async function fileToDocuments(filepath,buffer) {
       return new Document({
         pageContent: text,
         metadata: {
+          threadId: threadId,
           source: filepath,
           rowIndex: index,
           ...row,
@@ -40,7 +41,10 @@ export async function fileToDocuments(filepath,buffer) {
       chunkOverlap: 100,
     });
     const chunks = await splitter.splitDocuments(docs);
-    return chunks;
+     return chunks.map(chunk => {
+      chunk.metadata.threadId = threadId; 
+      return chunk;
+    });
   }
   // --- Unsupported file type ---
   throw new Error(`Unsupported file type: ${extension}`);

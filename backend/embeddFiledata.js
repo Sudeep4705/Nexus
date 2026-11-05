@@ -10,8 +10,8 @@ const embeddings = new VoyageEmbeddings({
   inputType: "document"
 });
 
-export async function indexFile(filepath,buffer) {
-  const documents = await fileToDocuments(filepath,buffer);
+export async function indexFile(filepath,buffer,threadId) {
+  const documents = await fileToDocuments(filepath,buffer,threadId);
   console.log(`Converted ${filepath} to ${documents.length} documents`);
   await QdrantVectorStore.fromDocuments(documents, embeddings,{
   url: process.env.QDRANT_URL,        

@@ -4,15 +4,20 @@ import path from "path";
 import { indexFile } from "../embeddFiledata.js";
 import { PrismaClient } from "@prisma/client";
 import { generateMain } from "../llmserver.js";
-import {validate} from "../middlewares/verifyLogin.js"
+import { validate } from "../middlewares/verifyLogin.js";
 import { asyncWrapper } from "../middlewares/asyncWrapper.js";
-const router =  express.Router()
+import { QdrantClient } from "@qdrant/js-client-rest";
+const router = express.Router();
 const storage = multer.memoryStorage();
 const prisma = new PrismaClient();
 
+const qdrantClient = new QdrantClient({
+  url: process.env.QDRANT_URL,
+  apiKey: process.env.QDRANT_API_KEY,
+});
 
 //this function for accept pdf and excel only
-const fileFilter = (req,file, cb) => {
+const fileFilter = (req, file, cb) => {
   const allowedExtensions = [".pdf", ".xlsx", ".xls"];
   const ext = path.extname(file.originalname).toLowerCase();
   if (allowedExtensions.includes(ext)) {
@@ -28,14 +33,17 @@ const uploads = multer({
   limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB limit
 });
 
-router.post("/add",validate,asyncWrapper(async (req, res) => {
-  const msg = req.body.content;
-  const threadId = req.body.threadId;
-  if (!msg) {
-    return res.status(400).json({ message: "All fields required" });
-  }
+router.post(
+  "/add",
+  validate,
+  asyncWrapper(async (req, res) => {
+    const msg = req.body.content;
+    const threadId = req.body.threadId;
+    if (!msg) {
+      return res.status(400).json({ message: "All fields required" });
+    }
     let chat = await prisma.chat.findUnique({
-      where:{
+      where: {
         threadId,
       },
     });
@@ -44,7 +52,7 @@ router.post("/add",validate,asyncWrapper(async (req, res) => {
       chat = await prisma.chat.create({
         data: {
           threadId,
-          userId:req.user.id
+          userId: req.user.id,
         },
       });
     }
@@ -65,22 +73,32 @@ router.post("/add",validate,asyncWrapper(async (req, res) => {
       },
     });
     res.status(200).json({ message: assistantReply });
-}))
+  }),
+);
 
-router.post("/fileupload",validate,uploads.single("file"),asyncWrapper(async (req, res) => {
+router.post(
+  "/fileupload",
+  validate,
+  uploads.single("file"),
+  asyncWrapper(async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: "'No file uploaded'" });
     }
     const { originalname, buffer } = req.file;
-    await indexFile(originalname, buffer);
-    res.status(200).json({  
+    const { threadId } = req.body;
+    await indexFile(originalname, buffer, threadId);
+    res.status(200).json({
       success: true,
       message: `File "${originalname}" indexed successfully.`,
     });
-}))
+  }),
+);
 
-router.get("/:threadId",validate, asyncWrapper(async (req, res) => {
-  const { threadId } = req.params;
+router.get(
+  "/:threadId",
+  validate,
+  asyncWrapper(async (req, res) => {
+    const { threadId } = req.params;
     let chathistory = await prisma.chat.findUnique({
       where: {
         threadId,
@@ -93,7 +111,7 @@ router.get("/:threadId",validate, asyncWrapper(async (req, res) => {
       return res.json({ messages: [] });
     }
 
-    if(chathistory.userId!==req.user.id){
+    if (chathistory.userId !== req.user.id) {
       return res.status(403).json({ error: "Unauthorized" });
     }
     const messages = chathistory.messages.map((m) => ({
@@ -101,15 +119,18 @@ router.get("/:threadId",validate, asyncWrapper(async (req, res) => {
       content: m.content,
     }));
     res.json({ messages });
-}))
+  }),
+);
 
-
-router.get("/",validate,asyncWrapper(async(req,res)=>{
+router.get(
+  "/",
+  validate,
+  asyncWrapper(async (req, res) => {
     const chats = await prisma.chat.findMany({
-      where:{
-        userId:req.user.id
+      where: {
+        userId: req.user.id,
       },
-      orderBy:{updatedAt:"desc"},
+      orderBy: { updatedAt: "desc" },
       select: {
         threadId: true,
         createdAt: true,
@@ -120,17 +141,33 @@ router.get("/",validate,asyncWrapper(async(req,res)=>{
           select: { content: true },
         },
       },
-    })
-    res.json({chats})
-}))
+    });
+    res.json({ chats });
+  }),
+);
 
-
-router.delete("/:threadId", validate,asyncWrapper(async (req, res) => {
-  const { threadId } = req.params;
+router.delete(
+  "/:threadId",
+  validate,
+  asyncWrapper(async (req, res) => {
+    const { threadId } = req.params;
     const chat = await prisma.chat.findUnique({ where: { threadId } });
     if (!chat) return res.status(404).json({ error: "Chat not found" });
-    if (chat.userId !== req.user.id) return res.status(403).json({ error: "Unauthorized" });
+    if (chat.userId !== req.user.id)
+      return res.status(403).json({ error: "Unauthorized" });
     await prisma.chat.delete({ where: { threadId } });
+    await qdrantClient.delete("file_collection", {
+      filter: {
+        must: [
+          {
+            key: "metadata.threadId",
+            match: { value: threadId },
+          },
+        ],
+      },
+    });
     res.json({ message: "Chat deleted" });
-}));
-export default router
+  }),
+);
+
+export default router;
