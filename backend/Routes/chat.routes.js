@@ -170,4 +170,19 @@ router.delete(
   }),
 );
 
+// router.post("/test-stream",async(req,res)=>{
+//   // 1. Tell the browser we are sending an SSE stream
+//   res.setHeader("Content-Type", "text/event-stream");
+//   res.setHeader("Cache-Control", "no-cache");
+//   res.setHeader("Connection", "keep-alive");
+
+//   res.write("data: Hello... \n\n");
+//    setTimeout(() => {
+//     res.write("data: World!\n\n");
+    
+//     // 4. NOW we close the connection
+//     res.end(); 
+//   }, 1000);
+// })
+
 export default router;
