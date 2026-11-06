@@ -208,7 +208,6 @@ Now answer the user's question.
       tool_choice: "auto",
       model: "openai/gpt-oss-20b",
       temperature: 0,
-      stream:true
     });
 
     //pushing the assistant message
@@ -217,8 +216,7 @@ Now answer the user's question.
     const toolcalls = completions.choices[0].message.tool_calls;
     //   console.log(toolcalls);
     if (!toolcalls) {
-      // return `${completions.choices[0].message.content}`;
-     return `${completions.choices[0].delta.content}`
+      return `${completions.choices[0].message.content}`;
     }
 
     for (let tool of toolcalls) {
