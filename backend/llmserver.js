@@ -218,7 +218,7 @@ Now answer the user's question.
     //   console.log(toolcalls);
     if (!toolcalls) {
       // return `${completions.choices[0].message.content}`;
-      console.log(completions.choices);
+      return completions.choices
     }
 
     for (let tool of toolcalls) {
