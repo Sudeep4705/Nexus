@@ -65,6 +65,7 @@ useEffect(()=>{
       let aiText = ""; // This holds the growing sentence
 
       // 2. Loop to catch the words as they arrive
+           // 2. Loop to catch the words as they arrive
       while (true) {
         const { done, value } = await reader.read();
         if (done) break; // Stop when the backend closes the pipe
@@ -73,20 +74,23 @@ useEffect(()=>{
         const chunk = decoder.decode(value, { stream: true });
         const cleanText = chunk.replace(/^data: /gm, "").replace(/\n\n/g, "");
         
-        // 4. Add the new words to our bucket
-        aiText += cleanText;
+        // 4. NEW: Split the chunk into individual characters
+        const characters = cleanText.split('');
+        
+        // 5. NEW: Add them to the screen one by one for a smooth typewriter effect
+        for (const char of characters) {
+          aiText += char;
 
-         // 5. Update the UI with a small delay for smooth typing effect
-        // We use setTimeout to throttle the React re-renders
-        await new Promise(resolve => setTimeout(resolve, 60));
+          // Update the UI for every single character
+          setMessage((prev) => {
+            const newMessages = [...prev];
+            newMessages[newMessages.length - 1].content = aiText;
+            return newMessages;
+          });
 
-        // 5. Update the UI with the new, longer sentence
-        setMessage((prev) => {
-          const newMessages = [...prev];
-          // Update the LAST message (our empty bucket)
-          newMessages[newMessages.length - 1].content = aiText;
-          return newMessages;
-        });
+          // Tiny delay per character (15ms is fast but perfectly smooth)
+          await new Promise(resolve => setTimeout(resolve, 15));
+        }
       }
       if(triggerRefresh) triggerRefresh()
       setinput("");
