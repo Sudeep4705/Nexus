@@ -78,7 +78,7 @@ useEffect(()=>{
 
          // 5. Update the UI with a small delay for smooth typing effect
         // We use setTimeout to throttle the React re-renders
-        await new Promise(resolve => setTimeout(resolve, 30));
+        await new Promise(resolve => setTimeout(resolve, 60));
 
         // 5. Update the UI with the new, longer sentence
         setMessage((prev) => {
