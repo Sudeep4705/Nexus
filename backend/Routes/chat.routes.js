@@ -33,7 +33,77 @@ const uploads = multer({
   limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB limit
 });
 
+router.post(
+  "/add",
+  validate,
+  asyncWrapper(async (req, res) => {
+    const msg = req.body.content;
+    const threadId = req.body.threadId;
+    if (!msg) {
+      return res.status(400).json({ message: "All fields required" });
+    }
+    let chat = await prisma.chat.findUnique({
+      where: {
+        threadId,
+      },
+    });
 
+    if (!chat) {
+      chat = await prisma.chat.create({
+        data: {
+          threadId,
+          userId: req.user.id,
+        },
+      });
+    }
+    await prisma.message.create({
+      data: {
+        chatId: chat.id,
+        role: "user",
+        content: msg,
+      },
+    });
+
+        // 2. SET UP THE SSE HEADERS (The Pipe)
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.flushHeaders(); // Force headers to send immediately
+
+    let fullAssistantReply = ""
+       try {
+      // 3. CATCH THE YIELDED WORDS AND SEND THEM
+      // generateMain is now a conveyor belt. We catch each piece as it arrives.
+      for await (const chunk of generateMain(msg, threadId)) {
+
+          // Add this chunk to our bucket
+        fullAssistantReply += chunk; 
+
+        // Format the chunk for SSE (must have "data: " and "\n\n")
+        res.write(`data: ${chunk}\n\n`);
+      }
+    // Save the final AI response to Prisma here once the stream is done.
+      // await prisma.message.create({ ... })
+        await prisma.message.create({
+      data: {
+        chatId: chat.id,
+        role: "assistant",
+        content: fullAssistantReply,
+      },
+    });
+
+
+      // 5. CLOSE THE CONNECTION
+      res.end(); 
+      
+    } catch (error) {
+      console.error("Streaming Error:", error);
+      res.write(`data: [Error] Failed to generate response.\n\n`);
+      res.end();
+    }
+  
+  }),
+);
 
 router.post(
   "/fileupload",
