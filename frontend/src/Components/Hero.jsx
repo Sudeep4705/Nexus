@@ -91,7 +91,7 @@ useEffect(()=>{
           });
 
           // Tiny delay per character (15ms is fast but perfectly smooth)
-          await new Promise(resolve => setTimeout(resolve, 15));
+          await new Promise(resolve => setTimeout(resolve, 10));
         }
       }
       if(triggerRefresh) triggerRefresh()
