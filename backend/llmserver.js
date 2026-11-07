@@ -23,7 +23,7 @@ const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
   collectionName: "file_collection",
 });
 
-export async function generateMain(userMsg, threadId) {
+export async function* generateMain(userMsg, threadId) {
   if (!userMsg) {
     return "Please ask the valid question";
   }
@@ -208,18 +208,48 @@ Now answer the user's question.
       tool_choice: "auto",
       model: "openai/gpt-oss-20b",
       temperature: 0,
+      stream:true
     });
 
-    //pushing the assistant message
-    messages.push(completions.choices[0].message);
+    // //pushing the assistant message
+    // messages.push(completions.choices[0].message);
 
-    const toolcalls = completions.choices[0].message.tool_calls;
-    //   console.log(toolcalls);
-    if (!toolcalls) {
-      return `${completions.choices[0].message.content}`;
+    // const toolcalls = completions.choices[0].message.tool_calls;
+    // //   console.log(toolcalls);
+    // if (!toolcalls) {
+    //   return `${completions.choices[0].message.content}`;
+    // }
+ let finalText = "";
+ let accumulatedToolCalls = []; 
+
+
+ 
+    for await (const chunk of completions) {
+      const delta = chunk.choices[0]?.delta;
+
+      // 1. If there is text, save it AND yield it to the frontend instantly
+      if (delta?.content) {
+        finalText += delta.content;
+        yield delta.content; // <--- This is the magic conveyor belt!
+      }
+
+      // 2. If there are tool calls, collect the pieces safely
+      if (delta?.tool_calls) {
+        accumulatedToolCalls.push(...delta.tool_calls);
+      }
     }
 
-    for (let tool of toolcalls) {
+     // 3. Now that the stream is finished, check if we need to run tools
+    if (accumulatedToolCalls.length > 0) {
+      // Build the official message for the history
+      messages.push({
+        role: "assistant",
+        content: finalText || null,
+        tool_calls: accumulatedToolCalls
+      });
+      
+      // (We will connect your tool loop right here in the next step)
+          for (let tool of accumulatedToolCalls) {
       let functionName = tool.function.name;
       let functionArguments = tool.function.arguments;
       if ("WebSearch" === functionName) {
@@ -279,6 +309,12 @@ Now answer the user's question.
         });
       }
     }
+    } else {
+      // No tools needed, we are done!
+      return; 
+    }
+
+
   }
 }
 

@@ -33,48 +33,7 @@ const uploads = multer({
   limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB limit
 });
 
-router.post(
-  "/add",
-  validate,
-  asyncWrapper(async (req, res) => {
-    const msg = req.body.content;
-    const threadId = req.body.threadId;
-    if (!msg) {
-      return res.status(400).json({ message: "All fields required" });
-    }
-    let chat = await prisma.chat.findUnique({
-      where: {
-        threadId,
-      },
-    });
 
-    if (!chat) {
-      chat = await prisma.chat.create({
-        data: {
-          threadId,
-          userId: req.user.id,
-        },
-      });
-    }
-    await prisma.message.create({
-      data: {
-        chatId: chat.id,
-        role: "user",
-        content: msg,
-      },
-    });
-
-    const assistantReply = await generateMain(msg, threadId);
-    await prisma.message.create({
-      data: {
-        chatId: chat.id,
-        role: "assistant",
-        content: assistantReply,
-      },
-    });
-    res.status(200).json({ message: assistantReply });
-  }),
-);
 
 router.post(
   "/fileupload",
