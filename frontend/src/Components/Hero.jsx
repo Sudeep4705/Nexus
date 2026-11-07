@@ -59,10 +59,31 @@ useEffect(()=>{
   body: JSON.stringify({ content: input, threadId }),
 });
       
-      setMessage((prev) => [
-        ...prev,
-        { role: "assistant", content:res.data.message },
-      ]);
+         // 1. Get the reader and the decoder
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let aiText = ""; // This holds the growing sentence
+
+      // 2. Loop to catch the words as they arrive
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break; // Stop when the backend closes the pipe
+
+        // 3. Translate bytes to text and clean it
+        const chunk = decoder.decode(value, { stream: true });
+        const cleanText = chunk.replace(/^data: /gm, "").replace(/\n\n/g, "");
+        
+        // 4. Add the new words to our bucket
+        aiText += cleanText;
+
+        // 5. Update the UI with the new, longer sentence
+        setMessage((prev) => {
+          const newMessages = [...prev];
+          // Update the LAST message (our empty bucket)
+          newMessages[newMessages.length - 1].content = aiText;
+          return newMessages;
+        });
+      }
       if(triggerRefresh) triggerRefresh()
       setinput("");
     } catch (error){
