@@ -48,14 +48,16 @@ useEffect(()=>{
   const handlesubmit = async () => {
     if (input.trim() == "") return;
     setMessage((prev) => [...prev, { role: "user", content: input }]);
+    setMessage((prev) => [...prev, { role: "assistant", content: "" }]);
     setisloading(true)
     setinput("")
     try {
-      let res = await axios.post(
-        "https://nexus-foq8.onrender.com/chats/add",
-        { content: input,threadId },
-        { withCredentials: true },
-      );
+    let res = await fetch("https://nexus-foq8.onrender.com/chats/add", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  credentials: "include", // This is the fetch version of withCredentials: true
+  body: JSON.stringify({ content: input, threadId }),
+});
       
       setMessage((prev) => [
         ...prev,
