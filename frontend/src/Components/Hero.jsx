@@ -95,7 +95,9 @@ useEffect(()=>{
       if(triggerRefresh) triggerRefresh()
       setinput("");
     } catch (error){
-        toast.error(error.response.data.message)
+       // Safely get the error message whether it's from fetch or something else
+        const errorMsg = error.message || "An error occurred while generating the response.";
+        toast.error(errorMsg);
     }finally{
       setisloading(false)
     }
