@@ -73,6 +73,8 @@ useEffect(()=>{
         // 3. Translate bytes to text and clean it
         const chunk = decoder.decode(value, { stream: true });
         const cleanText = chunk.replace(/^data: /gm, "").replace(/\n\n/g, "");
+
+         console.log("Backend sent this many characters:", cleanText.length, "| Text:", cleanText);
         
         // 4. NEW: Split the chunk into individual characters
         const characters = cleanText.split('');
