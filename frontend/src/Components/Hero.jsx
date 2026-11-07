@@ -60,7 +60,7 @@ useEffect(()=>{
 });
       
          // 1. Get the reader and the decoder
-      const reader = response.body.getReader();
+      const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let aiText = ""; // This holds the growing sentence
 
