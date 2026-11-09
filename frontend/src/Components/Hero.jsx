@@ -16,7 +16,14 @@ export default function Hero({threadId,triggerRefresh}){
   const messagesEndRef = useRef(null)
   const navigate = useNavigate();
 
+    // Auto-scroll to the bottom when new messages arrive
+  useEffect(() => {
+    // Grab the HTML element from the sticky note and scroll to it smoothly
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [message]); // <--- The watchdog only barks when 'message' changes
   // handle new chat or initial chat
+
+  
   useEffect(() => {
   if (threadId === "new"){
     const newId = uuidv4();
