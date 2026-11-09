@@ -23,7 +23,7 @@ export default function Hero({threadId,triggerRefresh}){
   }, [message]); // <--- The watchdog only barks when 'message' changes
   // handle new chat or initial chat
 
-  
+
   useEffect(() => {
   if (threadId === "new"){
     const newId = uuidv4();
@@ -177,6 +177,7 @@ useEffect(()=>{
           <h1 className="mt-5">Thinking....</h1>
           </>
         )}
+            <div ref={messagesEndRef} />
           </div>
    
         {/* text area section */}
