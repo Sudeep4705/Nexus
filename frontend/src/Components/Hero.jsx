@@ -17,12 +17,25 @@ export default function Hero({threadId,triggerRefresh}){
   const navigate = useNavigate();
 
     // Auto-scroll to the bottom when new messages arrive
-  useEffect(() => {
-    // Grab the HTML element from the sticky note and scroll to it smoothly
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [message]); // <--- The watchdog only barks when 'message' changes
-  // handle new chat or initial chat
+  // useEffect(() => {
+  //   // Grab the HTML element from the sticky note and scroll to it smoothly
+  //   messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  // }, [message]); // <--- The watchdog only barks when 'message' changes
+  // // handle new chat or initial chat
 
+    // Auto-scroll to the bottom when new messages arrive
+  useEffect(() => {
+    // DEBUG: Let's see if this is running
+    console.log("🔍 Auto-scroll triggered!");
+    console.log("📍 messagesEndRef.current is:", messagesEndRef.current);
+    
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      console.log("✅ Scrolled successfully!");
+    } else {
+      console.log("❌ ERROR: messagesEndRef.current is null!");
+    }
+  }, [message]);
 
   useEffect(() => {
   if (threadId === "new"){
