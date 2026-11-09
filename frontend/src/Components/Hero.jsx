@@ -25,13 +25,8 @@ export default function Hero({threadId,triggerRefresh}){
 
     // Auto-scroll to the bottom when new messages arrive
   useEffect(() => {
-    // DEBUG: Let's see if this is running
-    console.log("🔍 Auto-scroll triggered!");
-    console.log("📍 messagesEndRef.current is:", messagesEndRef.current);
-    
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-      console.log("✅ Scrolled successfully!");
     } else {
       console.log("❌ ERROR: messagesEndRef.current is null!");
     }
