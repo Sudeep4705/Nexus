@@ -1,10 +1,9 @@
-import React, { useRef, useState } from "react";
-import { SquarePlus, SquareArrowUp } from "lucide-react";
+import { useRef, useState } from "react";
 import axios from "axios";
 import { v4 as uuidv4 } from 'uuid';
 import { Paperclip } from "lucide-react";
 import { useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import { toast } from "react-toastify";
 import ReactMarkdown from 'react-markdown';
@@ -14,6 +13,7 @@ export default function Hero({threadId,triggerRefresh}){
   const [input, setinput] = useState("");
   const [message, setMessage] = useState([]);
   const [isloading,setisloading] = useState(false)
+  const messagesEndRef = useRef(null)
   const navigate = useNavigate();
 
   // handle new chat or initial chat
