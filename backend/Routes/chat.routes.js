@@ -7,7 +7,7 @@ import { generateMain } from "../llmserver.js";
 import { validate } from "../middlewares/verifyLogin.js";
 import { asyncWrapper } from "../middlewares/asyncWrapper.js";
 import { QdrantClient } from "@qdrant/js-client-rest";
-const rateLimit = require("express-rate-limit");
+import rateLimit from "express-rate-limit";
 const router = express.Router();
 const storage = multer.memoryStorage();
 const prisma = new PrismaClient();
