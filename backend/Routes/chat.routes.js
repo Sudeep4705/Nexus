@@ -20,7 +20,7 @@ const globalLimiter = rateLimit({
 
 const aiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 2, // Limit each IP to ONLY 15 AI requests per 15 minutes
+  max: 15, // Limit each IP to ONLY 15 AI requests per 15 minutes
   message: "You've sent too many AI requests. Please wait 15 minutes before asking again.",
 });
 router.use(globalLimiter);
