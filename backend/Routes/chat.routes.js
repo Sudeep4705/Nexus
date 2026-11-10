@@ -7,9 +7,23 @@ import { generateMain } from "../llmserver.js";
 import { validate } from "../middlewares/verifyLogin.js";
 import { asyncWrapper } from "../middlewares/asyncWrapper.js";
 import { QdrantClient } from "@qdrant/js-client-rest";
+const rateLimit = require("express-rate-limit");
 const router = express.Router();
 const storage = multer.memoryStorage();
 const prisma = new PrismaClient();
+
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes (in milliseconds)
+  max: 100, // Limit each IP to 100 requests per 15 minutes
+  message: "Too many requests from this IP, please try again after 15 minutes.",
+});
+
+const aiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 15, // Limit each IP to ONLY 15 AI requests per 15 minutes
+  message: "You've sent too many AI requests. Please wait 15 minutes before asking again.",
+});
+router.use(globalLimiter);
 
 const qdrantClient = new QdrantClient({
   url: process.env.QDRANT_URL,
@@ -91,8 +105,6 @@ router.post(
         content: fullAssistantReply,
       },
     });
-
-
       // 5. CLOSE THE CONNECTION
       res.end(); 
       
