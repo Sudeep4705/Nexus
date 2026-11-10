@@ -75,9 +75,23 @@ useEffect(()=>{
 });
       
 
-   if (!res.ok) {
-      const errorData = await res.json().catch(() => ({ message: res.statusText }));
-      throw new Error(errorData.message || "Failed to generate response.");
+     if (!res.ok) {
+      // 1. Read the raw text from the backend first
+      const rawText = await res.text(); 
+      
+      let errorMsg = "Failed to generate response.";
+      
+      // 2. Try to see if it's a JSON object (like our backend usually sends)
+      try {
+        const errorData = JSON.parse(rawText);
+        errorMsg = errorData.message || rawText;
+      } catch {
+        // 3. If it's not JSON, just use the raw text (which is what rate-limit sends)
+        errorMsg = rawText || res.statusText;
+      }
+      
+      // 4. Throw the error so your catch block shows the Toast
+      throw new Error(errorMsg);
     }
          // 1. Get the reader and the decoder
       const reader = res.body.getReader();
