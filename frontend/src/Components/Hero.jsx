@@ -76,7 +76,7 @@ useEffect(()=>{
       
 
    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({ message: response.statusText }));
+      const errorData = await res.json().catch(() => ({ message: res.statusText }));
       throw new Error(errorData.message || "Failed to generate response.");
     }
          // 1. Get the reader and the decoder
