@@ -74,6 +74,11 @@ useEffect(()=>{
   body: JSON.stringify({ content: input, threadId }),
 });
       
+
+   if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: response.statusText }));
+      throw new Error(errorData.message || "Failed to generate response.");
+    }
          // 1. Get the reader and the decoder
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
