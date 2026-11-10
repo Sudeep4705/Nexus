@@ -23,6 +23,12 @@ const aiLimiter = rateLimit({
   max: 15, // Limit each IP to ONLY 15 AI requests per 15 minutes
   message: "You've sent too many AI requests. Please wait 15 minutes before asking again.",
 });
+
+const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to ONLY 5 file uploads per 15 minutes
+  message: "You've uploaded too many files. Please wait 15 minutes before uploading again.",
+});
 router.use(globalLimiter);
 
 const qdrantClient = new QdrantClient({
@@ -120,6 +126,7 @@ router.post(
 
 router.post(
   "/fileupload",
+  uploadLimiter,
   validate,
   uploads.single("file"),
   asyncWrapper(async (req, res) => {
