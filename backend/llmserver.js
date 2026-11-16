@@ -267,7 +267,7 @@ Now answer the user's question.
           role: "tool",
           name: functionName,
           content: result,
-        });
+        }); 
       }
       // YouTube handler
       else if ("YouTubeSearch" === functionName) {

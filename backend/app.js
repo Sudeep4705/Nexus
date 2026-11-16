@@ -7,6 +7,10 @@ import authRouter from './Routes/auth.routes.js'
 import cookieParser from "cookie-parser";
 import { QdrantClient } from '@qdrant/js-client-rest';
 const app = express()
+
+app.set("trust proxy", 1); 
+
+
 const qdrantClient = new QdrantClient({
   url: process.env.QDRANT_URL,
   apiKey: process.env.QDRANT_API_KEY,
