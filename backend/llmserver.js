@@ -35,7 +35,7 @@ export async function* generateMain(userMsg, threadId) {
       messages: { orderBy: { createdAt: "asc" } },
     },
   });
-  const history = chat ? chat.messages : [];
+  const history = chat ? chat.messages.slice(-10) : [];
   const relevantchunks = await vectorStore.similaritySearch(userMsg, 3);
   const context = relevantchunks.map((chunk) => chunk.pageContent).join("\n\n");
   const sysPrompt = `
