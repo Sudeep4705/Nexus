@@ -12,6 +12,9 @@ const embeddings = new VoyageEmbeddings({
 
 export async function indexFile(filepath,buffer,threadId) {
   const documents = await fileToDocuments(filepath,buffer,threadId);
+  if (!documents || documents.length === 0) {
+  throw new Error("No readable text could be extracted from this file.");
+}
   console.log(`Converted ${filepath} to ${documents.length} documents`);
   await QdrantVectorStore.fromDocuments(documents, embeddings,{
   url: process.env.QDRANT_URL,        

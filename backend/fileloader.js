@@ -23,10 +23,10 @@ export async function fileToDocuments(filepath,buffer,threadId) {
       return new Document({
         pageContent: text,
         metadata: {
+          ...row,
           threadId: threadId,
           source: filepath,
           rowIndex: index,
-          ...row,
         },
       });
     });
