@@ -138,7 +138,7 @@ router.post(
     await indexFile(originalname, buffer, threadId);
     res.status(200).json({
       success: true,
-      message: `File "${originalname}" indexed successfully.`,
+      message: `"${originalname}" uploaded successfully.`,
     });
   }),
 );
