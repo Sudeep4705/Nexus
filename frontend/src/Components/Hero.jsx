@@ -155,7 +155,7 @@ useEffect(()=>{
     try{
    setisloading(true)
     let res = await axios.post("https://nexus-foq8.onrender.com/chats/fileupload",formdata,{withCredentials:true})
-    console.log('Upload success:', res.data);
+    toast.success(res.data.message)
     }
     catch(error){
         toast.error(error.response.data.message)
