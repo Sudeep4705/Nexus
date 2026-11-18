@@ -29,7 +29,11 @@ export async function* generateMain(userMsg, threadId) {
     return "Please ask the valid question";
   }
 const history = await prisma.message.findMany({
-  where: { threadId },
+  where: {
+    chat: {
+      threadId: threadId, // Filter through the related Chat model
+    },
+  },
   orderBy: { createdAt: "asc" },
   take: -10,
 });
