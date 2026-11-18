@@ -14,7 +14,7 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const embeddings = new VoyageEmbeddings({
   apiKey: process.env.VOYAGE_API_KEY,
   model: "voyage-3-lite",
-  inputType: "document",
+  inputType: "query",
 });
 
 const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
@@ -36,7 +36,7 @@ export async function* generateMain(userMsg, threadId) {
     },
   });
   const history = chat ? chat.messages.slice(-10) : [];
-  const relevantchunks = await vectorStore.similaritySearch(userMsg, 3);
+  const relevantchunks = await vectorStore.similaritySearch(userMsg, 3,{threadId:threadId});
   const context = relevantchunks.map((chunk) => chunk.pageContent).join("\n\n");
   const sysPrompt = `
 SYSTEM OVERRIDE: You are a helpful assistant with access to tools and a knowledge base.
