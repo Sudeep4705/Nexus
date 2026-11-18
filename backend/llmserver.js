@@ -11,6 +11,7 @@ const prisma = new PrismaClient();
 const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY });
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
+// we use the query because this one line message
 const embeddings = new VoyageEmbeddings({
   apiKey: process.env.VOYAGE_API_KEY,
   model: "voyage-3-lite",
@@ -32,7 +33,7 @@ export async function* generateMain(userMsg, threadId) {
       threadId,
     },
     include: {
-      messages: { orderBy: { createdAt: "asc" } },
+      messages: { orderBy: { createdAt: "asc" } }
     },
   });
   const history = chat ? chat.messages.slice(-10) : [];
