@@ -28,15 +28,11 @@ export async function* generateMain(userMsg, threadId) {
   if (!userMsg) {
     return "Please ask the valid question";
   }
-  const chat = await prisma.chat.findUnique({
-    where: {
-      threadId,
-    },
-    include: {
-      messages: { orderBy: { createdAt: "asc" } }
-    },
-  });
-  const history = chat ? chat.messages.slice(-10) : [];
+const history = await prisma.message.findMany({
+  where: { threadId },
+  orderBy: { createdAt: "asc" },
+  take: -10,
+});
   const relevantchunks = await vectorStore.similaritySearch(userMsg, 3,{threadId:threadId});
   const context = relevantchunks.map((chunk) => chunk.pageContent).join("\n\n");
   const sysPrompt = `
