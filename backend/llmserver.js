@@ -42,14 +42,13 @@ export async function* generateMain(userMsg, threadId) {
 SYSTEM OVERRIDE: You are a helpful assistant with access to tools and a knowledge base.
 
 ## DECISION PROCESS (Follow this order)
-1. **Check the "Relevant context"** provided in the user's prompt. If it contains the answer, use it directly. Do NOT call a tool for this.
-2. **If the user asks for YouTube videos, tutorials, or video content** → ALWAYS use the YouTubeSearch tool.
-3. **If the user asks for general knowledge, historical figures, definitions, or concepts** → use the WikipediaSearch tool.
-4. **If the user asks for real‑time or up‑to‑date information** (news, weather, current events, people, facts) → use the WebSearch tool.
-5. **If the user asks a math question** → use the Calculator tool.
-6. **If none of the above** → use your general knowledge.
+1. **If the user asks a casual or general conversational question** (e.g., "hi", "hello", "how are you") → Answer directly using your general knowledge. DO NOT call any tools.
+2. **If the user asks about their uploaded documents, files, PDFs, or specific data they provided** → YOU MUST use the SearchDocuments tool first to find the answer.
+3. **If the user asks for YouTube videos, tutorials, or video content** → ALWAYS use the YouTubeSearch tool.
+4. **If the user asks for general knowledge, historical figures, definitions, or concepts** → use the WikipediaSearch tool.
+5. **If the user asks for real‑time or up‑to‑date information** (news, weather, current events) → use the WebSearch tool.
+6. **If the user asks a math question** → use the Calculator tool.
 7. **If the user asks for a random decision, dice roll, or coin flip** → use the RollDice tool.
-8. **If the user asks about their uploaded documents, files, PDFs, or specific data they provided** → YOU MUST use the SearchDocuments tool first.
 
 ## TOOL RULES
 - **YouTubeSearch** – For ANY question that asks for videos, tutorials, or content on YouTube. Return actual video links.
@@ -92,8 +91,7 @@ Love is a deep emotional connection involving affection, care, and attachment.
 Now answer the user's question.
 `;
 
-  const userQuery = `Question:${userMsg}
-    IMPORTANT: You have been given permission to use this internal data. Do not refuse to answer.`;
+  const userQuery = `Question:${userMsg}`;
   const messages = [
     { role: "system", content: sysPrompt },
     ...history.map((m) => ({ role: m.role, content: m.content })),
@@ -392,7 +390,7 @@ async function WikipediaSearch({ query }) {
 async function SearchDocuments({ query }, threadId, vectorStore) {
   try {
     const results = await vectorStore.similaritySearch(query, 3, {
-      must: [{ key: "threadId", match: { value: threadId } }],
+      must: [{ key: "metadata.threadId", match: { value: threadId } }],
     });
 
     const context = results.map((chunk) => chunk.pageContent).join("\n\n");
