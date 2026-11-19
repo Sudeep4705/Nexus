@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import Groq from "groq-sdk";
 import { tavily } from "@tavily/core";
-import { evaluate} from "mathjs";
+import { evaluate } from "mathjs";
 import wiki from "wikipedia";
 import { QdrantVectorStore } from "@langchain/qdrant";
 import { VoyageEmbeddings } from "@langchain/community/embeddings/voyage";
@@ -28,26 +28,26 @@ export async function* generateMain(userMsg, threadId) {
   if (!userMsg) {
     return "Please ask the valid question";
   }
-const history = await prisma.message.findMany({
-  where: {
-    chat: {
-      threadId: threadId, // Filter through the related Chat model
-    },
-  },
-  orderBy: { createdAt: "asc" },
-  take: -10,
-});
-
-const relevantchunks = await vectorStore.similaritySearch(userMsg, 3, {
-  must: [
-    {
-      key: "threadId",
-      match: {
-        value: threadId,
+  const history = await prisma.message.findMany({
+    where: {
+      chat: {
+        threadId: threadId, // Filter through the related Chat model
       },
     },
-  ],
-});
+    orderBy: { createdAt: "asc" },
+    take: -10,
+  });
+
+  const relevantchunks = await vectorStore.similaritySearch(userMsg, 3, {
+    must: [
+      {
+        key: "threadId",
+        match: {
+          value: threadId,
+        },
+      },
+    ],
+  });
   const context = relevantchunks.map((chunk) => chunk.pageContent).join("\n\n");
   const sysPrompt = `
 SYSTEM OVERRIDE: You are a helpful assistant with access to tools and a knowledge base.
@@ -214,12 +214,32 @@ Now answer the user's question.
               required: ["type"],
             },
           },
-        }
+        },
+        //search info about documents
+        {
+          type: "function",
+          function: {
+            name: "SearchDocuments",
+            description:
+              "Search the user's uploaded documents, PDFs, and files for specific information. ONLY use this if the user is asking about their own data.",
+            parameters: {
+              type: "object",
+              properties: {
+                query: {
+                  type: "string",
+                  description:
+                    "The specific question to search for in the uploaded documents",
+                },
+              },
+              required: ["query"],
+            },
+          },
+        },
       ],
       tool_choice: "auto",
       model: "openai/gpt-oss-20b",
       temperature: 0,
-      stream:true
+      stream: true,
     });
 
     // //pushing the assistant message
@@ -230,11 +250,9 @@ Now answer the user's question.
     // if (!toolcalls) {
     //   return `${completions.choices[0].message.content}`;
     // }
- let finalText = "";
- let accumulatedToolCalls = []; 
+    let finalText = "";
+    let accumulatedToolCalls = [];
 
-
- 
     for await (const chunk of completions) {
       const delta = chunk.choices[0]?.delta;
 
@@ -250,82 +268,79 @@ Now answer the user's question.
       }
     }
 
-     // 3. Now that the stream is finished, check if we need to run tools
+    // 3. Now that the stream is finished, check if we need to run tools
     if (accumulatedToolCalls.length > 0) {
       // Build the official message for the history
       messages.push({
         role: "assistant",
         content: finalText || null,
-        tool_calls: accumulatedToolCalls
+        tool_calls: accumulatedToolCalls,
       });
-      
+
       // (We will connect your tool loop right here in the next step)
-          for (let tool of accumulatedToolCalls) {
-      let functionName = tool.function.name;
-      let functionArguments = tool.function.arguments;
-      if ("WebSearch" === functionName) {
-        const toolresult = await WebSearch(JSON.parse(functionArguments));
-        messages.push({
-          tool_call_id: tool.id,
-          role: "tool",
-          name: functionName,
-          content: toolresult,
-        });
-      } else if (functionName === "Calculator") {
-        const result = await calculate(JSON.parse(functionArguments));
-        messages.push({
-          tool_call_id: tool.id,
-          role: "tool",
-          name: functionName,
-          content: result,
-        }); 
-      }
-      // YouTube handler
-      else if ("YouTubeSearch" === functionName) {
-        const result = await YouTubeSearch(JSON.parse(functionArguments));
-        messages.push({
-          tool_call_id: tool.id,
-          role: "tool",
-          name: functionName,
-          content: result,
-        });
-      }
-      // wikipedia
-      else if (functionName === "WikipediaSearch") {
-        const args = JSON.parse(functionArguments);
-        const result = await WikipediaSearch(args);
-        messages.push({
-          tool_call_id: tool.id,
-          role: "tool",
-          name: functionName,
-          content: result,
-        });
-      
-      }
-      // roll dice
-      else if (functionName === "RollDice") {
-        const args = JSON.parse(functionArguments);
-        let result;
-        if (args.type === "coin") {
-          result = Math.random() > 0.5 ? "Heads" : "Tails";
-        } else {
-          // dice
-          result = Math.floor(Math.random() * 6) + 1;
+      for (let tool of accumulatedToolCalls) {
+        let functionName = tool.function.name;
+        let functionArguments = tool.function.arguments;
+        if ("WebSearch" === functionName) {
+          const toolresult = await WebSearch(JSON.parse(functionArguments));
+          messages.push({
+            tool_call_id: tool.id,
+            role: "tool",
+            name: functionName,
+            content: toolresult,
+          });
+        } else if (functionName === "Calculator") {
+          const result = await calculate(JSON.parse(functionArguments));
+          messages.push({
+            tool_call_id: tool.id,
+            role: "tool",
+            name: functionName,
+            content: result,
+          });
         }
-        messages.push({
-          tool_call_id: tool.id,
-          role: "tool",
-          name: functionName,
-          content: ` Result: ${result}`,
-        });
+        // YouTube handler
+        else if ("YouTubeSearch" === functionName) {
+          const result = await YouTubeSearch(JSON.parse(functionArguments));
+          messages.push({
+            tool_call_id: tool.id,
+            role: "tool",
+            name: functionName,
+            content: result,
+          });
+        }
+        // wikipedia
+        else if (functionName === "WikipediaSearch") {
+          const args = JSON.parse(functionArguments);
+          const result = await WikipediaSearch(args);
+          messages.push({
+            tool_call_id: tool.id,
+            role: "tool",
+            name: functionName,
+            content: result,
+          });
+        }
+        // roll dice
+        else if (functionName === "RollDice") {
+          const args = JSON.parse(functionArguments);
+          let result;
+          if (args.type === "coin") {
+            result = Math.random() > 0.5 ? "Heads" : "Tails";
+          } else {
+            // dice
+            result = Math.floor(Math.random() * 6) + 1;
+          }
+          messages.push({
+            tool_call_id: tool.id,
+            role: "tool",
+            name: functionName,
+            content: ` Result: ${result}`,
+          });
+        }
       }
-    }
     } else {
       // No tools needed, we are done!
-      return; 
+      return;
     }
-
-
   }
 }
 
@@ -380,8 +395,3 @@ async function WikipediaSearch({ query }) {
     return `Sorry, I couldn't find anything on Wikipedia for "${query}".`;
   }
 }
-
-
-
-
-
