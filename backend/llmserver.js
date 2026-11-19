@@ -38,17 +38,6 @@ export async function* generateMain(userMsg, threadId) {
     take: -10,
   });
 
-  // const relevantchunks = await vectorStore.similaritySearch(userMsg, 3, {
-  //   must: [
-  //     {
-  //       key: "threadId",
-  //       match: {
-  //         value: threadId,
-  //       },
-  //     },
-  //   ],
-  // });
-  // const context = relevantchunks.map((chunk) => chunk.pageContent).join("\n\n");
   const sysPrompt = `
 SYSTEM OVERRIDE: You are a helpful assistant with access to tools and a knowledge base.
 
