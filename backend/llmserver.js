@@ -242,15 +242,6 @@ Now answer the user's question.
       temperature: 0,
       stream: true,
     });
-
-    // //pushing the assistant message
-    // messages.push(completions.choices[0].message);
-
-    // const toolcalls = completions.choices[0].message.tool_calls;
-    // //   console.log(toolcalls);
-    // if (!toolcalls) {
-    //   return `${completions.choices[0].message.content}`;
-    // }
     let finalText = "";
     let accumulatedToolCalls = [];
 
@@ -338,17 +329,17 @@ Now answer the user's question.
           });
         }
         // Inside your for (let tool of accumulatedToolCalls) loop:
-       else if (functionName === "SearchDocuments") {
-  const args = JSON.parse(functionArguments);
-  const result = await SearchDocuments(args, threadId, vectorStore);
-  
-  messages.push({
-    tool_call_id: tool.id,
-    role: "tool",
-    name: functionName,
-    content: result,
-  });
-}
+        else if (functionName === "SearchDocuments") {
+          const args = JSON.parse(functionArguments);
+          const result = await SearchDocuments(args, threadId, vectorStore);
+
+          messages.push({
+            tool_call_id: tool.id,
+            role: "tool",
+            name: functionName,
+            content: result,
+          });
+        }
       }
     } else {
       // No tools needed, we are done!
@@ -412,11 +403,13 @@ async function WikipediaSearch({ query }) {
 async function SearchDocuments({ query }, threadId, vectorStore) {
   try {
     const results = await vectorStore.similaritySearch(query, 3, {
-      must: [{ key: "threadId", match: { value: threadId } }]
+      must: [{ key: "threadId", match: { value: threadId } }],
     });
-    
+
     const context = results.map((chunk) => chunk.pageContent).join("\n\n");
-    return context || "No relevant information found in the uploaded documents.";
+    return (
+      context || "No relevant information found in the uploaded documents."
+    );
   } catch (error) {
     console.error("SearchDocuments error:", error);
     return "Error searching documents. Please try again.";
