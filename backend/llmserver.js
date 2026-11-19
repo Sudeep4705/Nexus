@@ -337,6 +337,18 @@ Now answer the user's question.
             content: ` Result: ${result}`,
           });
         }
+        // Inside your for (let tool of accumulatedToolCalls) loop:
+       else if (functionName === "SearchDocuments") {
+  const args = JSON.parse(functionArguments);
+  const result = await SearchDocuments(args, threadId, vectorStore);
+  
+  messages.push({
+    tool_call_id: tool.id,
+    role: "tool",
+    name: functionName,
+    content: result,
+  });
+}
       }
     } else {
       // No tools needed, we are done!
@@ -394,5 +406,19 @@ async function WikipediaSearch({ query }) {
     return `**${summary.title}**\n\n${summary.extract}`;
   } catch (error) {
     return `Sorry, I couldn't find anything on Wikipedia for "${query}".`;
+  }
+}
+
+async function SearchDocuments({ query }, threadId, vectorStore) {
+  try {
+    const results = await vectorStore.similaritySearch(query, 3, {
+      must: [{ key: "threadId", match: { value: threadId } }]
+    });
+    
+    const context = results.map((chunk) => chunk.pageContent).join("\n\n");
+    return context || "No relevant information found in the uploaded documents.";
+  } catch (error) {
+    console.error("SearchDocuments error:", error);
+    return "Error searching documents. Please try again.";
   }
 }
