@@ -192,7 +192,7 @@ useEffect(()=>{
             {message.map((msg, index) => (
               <div
                 key={index}
-                className={`rounded-xl p-3  max-w-fit ${msg.role === "user" ? "bg-neutral-200 ml-auto" : "bg-neutral-300 mr-auto"} `}
+                className={`rounded-xl prose p-3  max-w-fit ${msg.role === "user" ? "bg-neutral-200 ml-auto" : "bg-neutral-300 mr-auto"} `}
               >
                <ReactMarkdown remarkPlugins={[remarkGfm]}>
     {msg.content}
